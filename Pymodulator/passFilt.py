@@ -14,6 +14,65 @@ class binary_conversor:
 				bin_arr.append(dec)
 				dec = ""
 		return bin_arr
+	def Re_arrayMQAM(v, M):
+		i = 0
+		dec = ""
+		bin_arr_x0 = []
+		lim = np.log2(M)
+		for i in range (0, int(lim)):
+			bin_arr_x0.append(np.array(v[int(i*(len(v)/lim)):(i+1)*(int(len(v)/lim))]))
+			i += 1
+		print(np.array(v))
+		print(len(v))
+		print(np.transpose(np.array(bin_arr_x0)))
+		print(np.shape(bin_arr_x0))
+		bin_arr_x = []
+		for arr in np.transpose(bin_arr_x0):
+			print(arr)
+			aux = ""
+			i = 0.0
+			j = 0
+			while j < len(arr):
+				if i < float(j):
+					bin_arr_x.append(complex(int(aux, 2)).real*np.cos(2*np.pi + 
+						i*(2*np.pi)))
+					i += 0.1
+				else:
+					for k in range(0, len(arr)):
+						aux += str(arr[k])
+					j += 1
+		print(np.array(bin_arr_x))
+		return bin_arr_x
+	def Im_arrayMQAM(v, M):
+		i = 0
+		dec = ""
+		bin_arr_x0 = []
+		lim = np.log2(M)
+		for i in range (0, int(lim)):
+			bin_arr_x0.append(np.array(v[int(i*(len(v)/lim)):(i+1)*(int(len(v)/lim))]))
+			i += 1
+		print(np.array(v))
+		print(len(v))
+		print(np.transpose(np.array(bin_arr_x0)))
+		print(np.shape(bin_arr_x0))
+		bin_arr_x = []
+		for arr in np.transpose(bin_arr_x0):
+			print(arr)
+			aux = ""
+			i = 0.0
+			j = 0
+			while j < len(arr):
+				if i < float(j):
+					bin_arr_x.append((int(aux, 2)*1j).imag*np.sin(2*np.pi + 
+						i*(2*np.pi)))
+					i += 0.1
+				else:
+					aux = ""
+					for k in range(0, len(arr)):
+						aux += str(arr[k])
+					j += 1
+		print(np.array(bin_arr_x))
+		return bin_arr_x
 				
 class gray_scheme:
 	def binary_gnerator(s, N):
@@ -30,11 +89,13 @@ class gray_scheme:
 			if (abs(n)-1) != 0:
 				n = (3*(abs(n)-1))*(n/abs(n))
 			gray_dict[i] = [bin(i), n]
-		return(gray_dict)
-	def gray_mapping(v, dct):
+		return(gray_dict, n)
+	def gray_mapping(v, dct, m):
+		x0 = []
 		x = []
-		y = []
+		i = 0
 		for n in v:
+			x0 = []
 			print(n)
 			aux = list(n)
 			a1 = ""
@@ -53,18 +114,19 @@ class gray_scheme:
 		y1 = gray_scheme.encode_gray(y, dct)
 		return x1, y1
 				
-	def gray_generator(N):
+	def gray_generator_MQAM(M):
 		gray_dict = {}
-		for i in range (0, 2**N):
-			a = (i - (2**N)/2)
+		aux = np.log2(M)
+		for i in range (0, int(aux)):
+			a = (i - aux/2)
 			n = a
 			if a >= 0:
-				a = (i - (2**N)/2) + 1
+				a = (i - aux) + 1
 				n = a
 			if (abs(n)-1) != 0:
 				n = (3*(abs(n)-1))*(n/abs(n))
 			gray_dict[i] = [bin(i), n]
-		return(gray_dict)
+		return(gray_dict, aux)
 	def encode_gray(v, dct):
 		decode_vec = []
 		test_vec = []

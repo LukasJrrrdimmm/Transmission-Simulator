@@ -5,17 +5,45 @@ import numpy as np
 import math as mth
 import matplotlib.pyplot as plt
 import filtering as filt
-def MQAM_moddemod_testing(sz, M, entrada):# início da função
-	e = []
-	if entrada == True: # dúvida manualmente ou aleatória através da var entrada
-		print("digite o sinal de entrada")
-		for i in range(0, sz):
-			print("valor da posição {}".format(i))
-			e.append(int(input()))
-		e = np.array(e)
-	else:
-		e = filt.binary_generator(sz, M)
-	s, d = filt.Modulations.MQAM(e, 2**M) # modulação
+
+def test_mqam(sd, rg): # MQAM Tradicional
+	e = filt.binary_generator(sd, rg)
+	s, d = filt.Modulations.MQAM(e, 2**rg) # modulação
+	sns.set_style("whitegrid")
+	plt.plot(s.real, s.imag, "r")
+	plt.plot(s.real, s.imag, "ko")
+	plt.title("MQAM Signal Eye Diagram Emissor")
+	plt.show()
+	sns.set_style("whitegrid")
+	pd.DataFrame({"Fase":s.real, "Quadratura":s.imag, 
+		"Sinal Completo":(s.real - s.imag)}).plot(subplots=True)
+	plt.title("MQAM")
+	plt.show()
+	rec = filt.Demodulations.De_MQAM(s, d)
+	rec = np.array(rec)
+	print("diff = {}".format(len([(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
+	plt.show()
+def test_mqamEntrelac_A(sd, rg): #MQAM Entrelqaçado Tipo A
+	e = filt.binary_generator(sd, rg)
+	s, d = filt.Modulations.MQAM_Entrelac_TH(e, 2**rg) # modulação
+	sns.set_style("whitegrid")
+	plt.plot(s.real, s.imag, "r")
+	plt.plot(s.real, s.imag, "ko")
+	plt.title("MQAM Signal Eye Diagram Emissor")
+	plt.show()
+	sns.set_style("whitegrid")
+	pd.DataFrame({"Fase":s.real, "Quadratura":s.imag, 
+		"Sinal Completo":(s.real - s.imag)}).plot(subplots=True)
+	plt.title("MQAM")
+	plt.show()
+	rec = filt.Demodulations.De_MQAM_Entrelac_TH(s, d)
+	sns.set_style("whitegrid")
+	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
+	plt.title("Sinal Reconstituido")
+	plt.show()
+def test_mqamEntrelac_B(sd, rg): #MQAM Entrelaçado Tipo B
+	e = filt.binary_generator(sd, rg)
+	s, d = filt.Modulations.MQAM_Entrelac_TV(e, 2**rg) # modulação
 	sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -31,46 +59,10 @@ def MQAM_moddemod_testing(sz, M, entrada):# início da função
 	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
 	plt.title("Sinal Reconstituido")
 	plt.show()
-	return rrc
-def MQAMENV_moddemod_testing(sz, M, entrada):# início da função
-	e = []
-	if entrada == True: # dúvida manualmente ou aleatória através da var entrada
-		print("digite o sinal de entrada")
-		for i in range(0, sz):
-			print("valor da posição {}".format(i))
-			e.append(int(input()))
-		e = np.array(e)
-	else:
-		e = filt.binary_generator(sz, M)
-	s, d = filt.Modulations.MQAMEntrelac_TV(e, 2**M) # modulação
-	sns.set_style("whitegrid")
-	plt.plot(s.real, s.imag, "r")
-	plt.plot(s.real, s.imag, "ko")
-	plt.title("MQAM Signal Eye Diagram Emissor")
-	plt.show()
-	sns.set_style("whitegrid")
-	pd.DataFrame({"Fase":s.real, "Quadratura":s.imag, 
-		"Sinal Completo":(s.real - s.imag)}).plot(subplots=True)
-	plt.title("MQAM")
-	plt.show()
-	rec = filt.Demodulations.De_MQAMEntrelac_TV(s, d)
-	sns.set_style("whitegrid")
-	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
-	plt.title("Sinal Reconstituido")
-	plt.show()
-	return rrc
-def MQPSK_moddemod_testing(sz, M, entrada):
-	e = []
-	if entrada == True:
-		print("digite o sinal de entrada")
-		for i in range(0, sz):
-			print("valor da posição {}".format(i))
-			e.append(int(input()))
-		e = np.array(e)
-	else:
-		e = filt.binary_generator(sz, mth.ceil(M**(1/2)))
-	s = filt.Modulations.MQPSK(e, M)
-	filt.GRAY.gray_mapping(e, M)
+def test_mqpsk(sd, rg): # MQPSK
+	e = filt.binary_generator(sd, rg)
+	s, d = filt.Modulations.MQPSK(e, rg)
+	#filt.GRAY.gray_mapping(e, rg)
 	sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -81,14 +73,8 @@ def MQPSK_moddemod_testing(sz, M, entrada):
 		"Sinal Completo":(s.real - s.imag)}).plot(subplots=True)
 	plt.title("MQPSK Mod Signal")
 	plt.show()
-	b_x, b_y = filt.Demodulations.De_MQAM(s, M)
-	r = []
-	for i in range(0, len(bin_x)):
-		r.append(b_x[i] + b_y[i])
-	print(r)
-	rec = filt.QuadratureDecoder(r, log2(M))
+	rec = filt.Demodulations.De_MQPSK(s, rg, d)
 	sns.set_style("whitegrid")
 	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
 	plt.title("Sinal Reconstituido")
 	plt.show()
-	return r

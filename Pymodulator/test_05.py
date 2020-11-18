@@ -4,12 +4,17 @@ import pandas as pd
 import numpy as np
 import math as mth
 import matplotlib.pyplot as plt
-import channeling as chan
+from channeling import Noising as Chan_N
 import filtering as filt
 
 def test_mqam(sd, rg): # MQAM Tradicional
 	e = filt.binary_generator(sd, rg)
 	s, d, f1, f2 = filt.Modulations.MQAM(e, 2**rg) # modulação
+	Pf = f1[0]/2
+	Pq = f2[0]/2
+	f = (Pf - Pq)/4
+	g = np.size(s)
+	cs = Chan_N.WhiteNoiseGenerator(s, 0.8, f, g)
 	sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -20,6 +25,11 @@ def test_mqam(sd, rg): # MQAM Tradicional
 		"Sinal Completo":(s.real - s.imag)}).plot(subplots=True)
 	plt.title("MQAM")
 	plt.show()
+	sns.set_style("whitegrid")
+	pd.DataFrame({"Fase":cs.real, "Quadratura":cs.imag, 
+		"Sinal Completo (Com Ruido Branco)":(cs.real - cs.imag)}).plot(subplots=True)
+	plt.title("MQAM")
+	plt.show()
 	rec = filt.Demodulations.De_MQAM(s, d)
 	rec = np.array(rec)
 	print("diff = {}".format(len([(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
@@ -27,6 +37,11 @@ def test_mqam(sd, rg): # MQAM Tradicional
 def test_mqamEntrelac_A(sd, rg): #MQAM Entrelqaçado Tipo A
 	e = filt.binary_generator(sd, rg)
 	s, d, f1, f2 = filt.Modulations.MQAM_Entrelac_TH(e, 2**rg) # modulação
+	Pf = f1[0]/2
+	Pq = f2[0]/2
+	f = (Pf - Pq)/4
+	g = np.size(s)
+	cs = Chan_N.WhiteNoiseGenerator(s, 3.6, f, g)
 	sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -39,7 +54,7 @@ def test_mqamEntrelac_A(sd, rg): #MQAM Entrelqaçado Tipo A
 	plt.show()
 	sns.set_style("whitegrid")
 	pd.DataFrame({"Fase":cs.real, "Quadratura":s.imag, 
-		"Sinal Completo (Com Ruido Branco)":(s.real - s.imag)}).plot(subplots=True)
+		"Sinal Completo (Com Ruido Branco)":(cs.real - cs.imag)}).plot(subplots=True)
 	plt.title("MQAM")
 	plt.show()
 	rec = filt.Demodulations.De_MQAM_Entrelac_TH(s, d)
@@ -68,7 +83,6 @@ def test_mqamEntrelac_B(sd, rg): #MQAM Entrelaçado Tipo B
 def test_mqpsk(sd, rg): # MQPSK
 	e = filt.binary_generator(sd, rg)
 	s, d = filt.Modulations.MQPSK(e, 2**rg)
-	print(s)
 	#filt.GRAY.gray_mapping(e, rg)
 	sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")

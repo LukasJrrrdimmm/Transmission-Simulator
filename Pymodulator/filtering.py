@@ -7,6 +7,28 @@ import seaborn as sns
 def binary_generator(s, N):
 		return np.random.randint(2, size = s**N)
 
+def max2pow(lim):
+	i = 0
+	a = 2**i
+	while 1:
+		if a >= lim:
+			break
+		else:
+			i += 1
+			a = 2**i
+	return a
+
+def eqalising2pow(l, M):
+	i = M
+	a = 2**M
+	while 1:
+		if a % i == 0:
+			break
+		else:
+			i -= 1
+			a = 2**i
+	return a
+
 def itob_array(v, N):
 	bin_vec = []
 	for num in v:
@@ -94,7 +116,9 @@ class Modulations:
 	def MQAM_Entrelac_TH(v, M): # Geração do sinal MQAM Entrelaçado tipo A
 		dec = ""
 		bin_arr_x0 = []
-		lim = np.log2(M) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
+		if lim > 8: # (M <= 256)
+			lim = 8
 		for i in range (0, int(lim)): # Divisão do vetor
 			bin_arr_x0.append(np.array(v[int(i*(len(v)/lim)):(i+1)*(int(len(v)/lim))]))
 		print(np.array(v))
@@ -143,11 +167,11 @@ class Modulations:
 				s.append(a.real*np.cos((2*np.pi)/j) + 
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
-		return np.array(s), d
+		return np.array(s), d, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
 	def MQAM_Entrelac_TV(v, M): # Geração do sinal MQAM Entrelaçado Tipo B
 		dec = ""
 		bin_arr_x0 = []
-		lim = np.log2(M) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
 		for i in range(0, len(v), int(lim)): # Divisão do vetor
 			bin_arr_x0.append(np.array(v[i:i+int(lim)]))
 		print(np.array(v))
@@ -200,7 +224,7 @@ class Modulations:
 	def MQAM(v, M): # Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
-		lim = np.log2(M) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
 		print(f"{lim} | {len(v)}")
 		print(np.array(v))
 		for i in range(0, len(v), int(lim)): # Divisão do vetor
@@ -248,17 +272,16 @@ class Modulations:
 				s.append(a.real*np.cos((2*np.pi)/j) + 
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
-		return np.array(s), d
+		return np.array(s), d, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
 	def MQPSK(v, M): #Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
 		lim = np.log2(M) # Execução do logarítimo para iteração
-		for i in range (0, int(lim)): # Divisão do vetor
-			bin_arr_x0.append(np.array(v[int(i*(len(v)/lim)):(i+1)*(int(len(v)/lim))]))
+		print(f"{lim} | {len(v)}")
 		print(np.array(v))
-		print(len(v))
-		aux = np.transpose(np.array(bin_arr_x0)) # transposição do vetor
-		print(aux)
+		for i in range(0, len(v), int(lim)): # Divisão do vetor
+			bin_arr_x0.append(np.array(v[i : i + int(lim)]))
+		aux = np.array(bin_arr_x0) # transposição do vetor
 		a2 = []
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		a1 = []
@@ -297,8 +320,11 @@ class Modulations:
 		plt.show()
 		s = []
 		for a in np.array(a2):
-			s.append(np.cos((2*np.pi)/a.real) + 
-				np.sin((2*np.pi)/a.imag)*1j)
+			j = 16
+			while j > 0:
+				s.append(np.cos(np.pi/2 + np.pi/a.real) + 
+					np.sin((np.pi/a.imag))*1j)
+				j -= 1
 		return np.array(s), d
 
 class PassFilters:
@@ -547,31 +573,37 @@ class Demodulations:
 	def De_MQPSK(signal, M, d):
 		x = signal.real
 		y = signal.imag
+		print(pd.DataFrame({'X':x, 'Y':y}))
 		xdm = []
 		ydm = []
 		xgm = []
 		ygm = []
 		for i in range(0, len(x)):
-			aux_X = ((np.arccos(x[i])**(-1))*np.pi)
+			if(i%16 == 0) & (i > 0):
+				xgm.append(np.mean(xdm))
+				xdm = []
+				ygm.append(np.mean(ydm))
+				ydm = []
+			aux_X = (np.arccos(x[i])/np.pi)**(-1)
 			if aux_X < 0:
 				xdm.append(aux_X + d/2)
 			else:
 				xdm.append(aux_X + (d/2 - 1))
-			xgm.append(xdm[i])
-			aux_Y = ((np.arcsin(y[i])**(-1))*np.pi)
+			aux_Y = (np.arcsin(-y[i])/np.pi)**(-1)
 			if aux_Y < 0:
 				ydm.append(aux_Y + d/2)
 			else:
 				ydm.append(aux_Y + (d/2 - 1))
-			ygm.append(aux_Y)
-		print(pd.DataFrame({"Xgm":xdm, "Ygm":ydm}))
+			print(f"{aux_X} | {aux_Y}")
+		xgm.append(np.mean(xdm))
+		ygm.append(np.mean(ydm))
+		print(pd.DataFrame({"Xgm":xgm, "Ygm":ygm}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":xgm, "Y":ygm}).plot(subplots=True)
 		plt.title("Sinal Reconstituído")
 		plt.show()
-		print(pd.DataFrame({"Xdm":xdm, "Ydm":ydm}))
-		bin_x = filt.itob_array(xdm, np.log2(M))
-		bin_y = filt.itob_array(ydm, np.log2(M))
+		bin_x = filt.itob_array(xgm, np.log2(d))
+		bin_y = filt.itob_array(ygm, np.log2(d))
 		rec = []
 		for i in range(0, len(bin_x)):
 			for j in bin_x[i]:

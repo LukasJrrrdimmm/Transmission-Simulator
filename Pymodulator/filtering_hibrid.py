@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import commpy.modulation as commod
+import mpskadjust as pskf
 
 def binary_generator(s, N):
 		return np.random.randint(2, size = s**N)
@@ -46,8 +48,16 @@ def itob_array(v, N):
 		else:
 			bin_vec.append(aux)
 	print(bin_vec)
-		
 	return bin_vec
+
+def Generic_Carrier(bp):
+	sp=bp*2    #symbol period for M-array QAM
+	sr=1/sp    #symbol rate
+	f=sr*2     #carry frequency 
+	t=np.arange(sp/100, sp, sp/100)
+	ss=len(t)
+	return t, ss, f
+
 def QuadratureDecoder(v, N):
 	s = ''
 	for i in range(0, N):
@@ -113,12 +123,12 @@ class Modulations:
 				bin_arr.append(dec)
 				dec = ""
 		return bin_arr
-	def MQAM_Entrelac_TH(v, M): # Geração do sinal MQAM Entrelaçado tipo A
+	def MQAM_Entrelac_TH(v, M, T): # Geração do sinal MQAM Entrelaçado tipo A
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
-		if lim > 16: # (M <= 256)
-			lim = 16
+		if lim > 64: # (M <= 64)
+			lim = 64
 		print("M = {}QAM".format(lim))
 		for i in range (0, int(lim)): # Divisão do vetor
 			bin_arr_x0.append(np.array(v[int(i*(len(v)/lim)):(i+1)*(int(len(v)/lim))]))
@@ -127,52 +137,35 @@ class Modulations:
 		aux = np.transpose(np.array(bin_arr_x0)) # transposição do vetor
 		print(aux)
 		a2 = []
-		a1 = []
+		modcpy = commod.QAMModem(lim)
+		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
-			l1 = len(b)
-			l2 = mth.ceil(len(b)/2)
-			ax = b[0:l2]
-			ay = b[l2:l1]
-			d = 2**l2
-			aux2r = ""
-			for i in ax:
-				aux2r += str(i)
-			aux2i = ""
-			for i in ay:
-				aux2i += str(i)
-			z1 = [int(aux2r, 2), int(aux2i,2)]
-			z2 = []
-			for num in z1:
-				if(num - d/2 < 0):
-					z2.append(float(num - d/2))
-				else:
-					z2.append(float((num - d/2) + 1))
-			a1.append(z1[0] + 1j*z1[1])
-			a2.append(z2[0] + 1j*z2[1])
-		GRAY.gray_mapping(l2)
+			d1 = modcpy.modulate(b)
+			l1 = len(d1)
+			for i in d1:
+				a2.append(i)
 		print(np.array(a2))
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a1).real, "Y":np.array(a1).imag}).plot(subplots=True)
-		plt.title("Pre-Mod")
-		plt.show()
 		
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
-		plt.title("Pre-Mod-Gray")
+		plt.title("Pre-Mod Contellated")
 		plt.show()
 		s = []
-		for a in np.array(a2): # modulação
-			j = 16
-			while j > 0:
-				s.append(a.real*np.cos((2*np.pi)/j) + 
-					a.imag*np.sin((2*np.pi)/j)*1j)
-				j -= 1
-		return np.array(s), d, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
-	def MQAM_Entrelac_TV(v, M): # Geração do sinal MQAM Entrelaçado Tipo B
+		for a in np.array(a2): # modulação : comnversão para a forma de onda representada com o período T = 16
+			t = T
+			while t > 0:
+				s.append(a.real*np.cos((2*np.pi)/t) + 
+					a.imag*np.sin((2*np.pi)/t)*1j)
+				t -= 1
+		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+	def MQAM_Entrelac_TV(v, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
+		if lim > 16: # (M <= 256)
+			lim = 16
+		print("M = {}QAM".format(lim))
 		for i in range(0, len(v), int(lim)): # Divisão do vetor
 			bin_arr_x0.append(np.array(v[i:i+int(lim)]))
 		print(np.array(v))
@@ -180,49 +173,30 @@ class Modulations:
 		aux = np.transpose(np.array(bin_arr_x0)) # transposição do vetor
 		print(aux)
 		a2 = []
-		a1 = []
+		l1 = 0
+		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
+		modcpy = commod.QAMModem(lim)
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
-			l1 = len(b)
-			l2 = mth.ceil(len(b)/2)
-			ax = b[0:l2]
-			ay = b[l2:l1]
-			d = 2**l2
-			aux2r = ""
-			for i in ax:
-				aux2r += str(i)
-			aux2i = ""
-			for i in ay:
-				aux2i += str(i)
-			z1 = [int(aux2r, 2), int(aux2i,2)]
-			z2 = []
-			for num in z1:
-				if(num - d/2 < 0):
-					z2.append(float(num - d/2))
-				else:
-					z2.append(float((num - d/2) + 1))
-			a1.append(z1[0] + 1j*z1[1])
-			a2.append(z2[0] + 1j*z2[1])
-		GRAY.gray_mapping(l2)
+			d1 = modcpy.modulate(b)
+			l1 = len(d1)
+			for i in d1:
+				a2.append(i)
 		print(np.array(a2))
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a1).real, "Y":np.array(a1).imag}).plot(subplots=True)
-		plt.title("Pre-Mod")
-		plt.show()
 		
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
-		plt.title("Pre-Mod-Gray")
+		plt.title("Pre-Mod Constellated")
 		plt.show()
 		s = []
 		for a in np.array(a2): # modulação
-			j = 16
+			j = T
 			while j > 0:
 				s.append(a.real*np.cos((2*np.pi)/j) + 
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
-		return np.array(s), d
-	def MQAM(v, M): # Geração do sinal MQAM
+		return np.array(s), l1
+	def MQAM(v, M, T): # Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -233,51 +207,34 @@ class Modulations:
 		aux = np.array(bin_arr_x0) # transposição do vetor
 		print(aux)
 		a2 = []
-		a1 = []
+		modcpy = commod.QAMModem(lim)
+		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
-			l1 = len(b)
-			l2 = mth.ceil(len(b)/2)
-			ax = b[0:l2]
-			ay = b[l2:l1]
-			d = 2**l2
-			aux2r = ""
-			for i in ax:
-				aux2r += str(i)
-			aux2i = ""
-			for i in ay:
-				aux2i += str(i)
-			z1 = [int(aux2r, 2), int(aux2i,2)]
-			z2 = []
-			for num in z1:
-				if(num - d/2 < 0):
-					z2.append(float(num - d/2))
-				else:
-					z2.append(float((num - d/2) + 1))
-			a1.append(z1[0] + 1j*z1[1])
-			a2.append(z2[0] + 1j*z2[1])
+			aux = modcpy.modulate(b)
+			l1 = len(aux)
+			for num in aux:
+				a2.append(num)
+			
 		print(np.array(a2))
-		GRAY.gray_mapping(l2)
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a1).real, "Y":np.array(a1).imag}).plot(subplots=True)
-		plt.title("Pre-Mod")
-		plt.show()
+
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
-		plt.title("Pre-Mod-Gray")
+		plt.title("Pre-Mod Constellated")
 		plt.show()
 		s = []
 		for a in np.array(a2): # modulação
-			j = 16
+			j = T
 			while j > 0:
-				s.append(a.real*np.cos((2*np.pi)/j) + 
-					a.imag*np.sin((2*np.pi)/j)*1j)
+				s.append(a.real*np.cos(2*np.pi + (2*np.pi)/j) + 
+					a.imag*np.sin(2*np.pi + (2*np.pi/j))*1j)
 				j -= 1
-		return np.array(s), d, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
-	def MQPSK(v, M): #Geração do sinal MQAM
+		print(f"key = {l1}")
+		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+	def MQPSK(v, M, T): #Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
-		lim = np.log2(M) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
 		print(f"{lim} | {len(v)}")
 		print(np.array(v))
 		for i in range(0, len(v), int(lim)): # Divisão do vetor
@@ -285,49 +242,30 @@ class Modulations:
 		aux = np.array(bin_arr_x0) # transposição do vetor
 		a2 = []
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
-		a1 = []
+		modcpy = commod.QAMModem(lim)
+		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
-			l1 = len(b)
-			l2 = mth.ceil(len(b)/2)
-			ax = b[0:l2]
-			ay = b[l2:l1]
-			d = 2**l2
-			aux2r = ""
-			for i in ax:
-				aux2r += str(i)
-			aux2i = ""
-			for i in ay:
-				aux2i += str(i)
-			z1 = [int(aux2r, 2), int(aux2i,2)]
-			z2 = []
-			for num in z1:
-				if(num - d/2 < 0):
-					z2.append(float(num - d/2))
-				else:
-					z2.append(float((num - d/2) + 1))
-			a1.append(z1[0] + 1j*z1[1])
-			a2.append(z2[0] + 1j*z2[1])
+			aux = modcpy.modulate(b)
+			l1 = len(aux)
+			for num in aux:
+				a2.append(num)
+			
 		print(np.array(a2))
-		GRAY.gray_mapping(l2)
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a1).real, "Y":np.array(a1).imag}).plot(subplots=True)
-		plt.title("Pre-Mod")
-		plt.show()
-		
+
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
-		plt.title("Pre-Mod-Gray")
+		plt.title("Pre-Mod Constellated")
 		plt.show()
 		s = []
+		gs = pskf.cosAdjust(np.array(a2).real) - pskf.sinAdjust(np.array(a2).imag)*1j
 		for a in np.array(a2):
-			j = 16
+			j = T
 			while j > 0:
-				s.append(np.cos(np.pi/2 + np.pi/a.real) + 
-					np.sin((np.pi/a.imag))*1j)
+				s.append(a)
 				j -= 1
-		return np.array(s), d
-
+		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+# signal, key, M, f1, f2
 class PassFilters:
 	def RcossineFilter(s, f, f1, B):
 		f0 = abs(f)
@@ -430,187 +368,104 @@ class Demodulations:
 				c -= 1
 			rs.append(aux_xa + aux_xb)
 		print(np.array(rs))
-	def De_MQAM(signal, d):
-		x = signal.real
-		y = signal.imag
-		print(pd.DataFrame({"X":x, "Y":y}))
+	def De_MQAM(signal, key, M, T):
+		modcpy = commod.QAMModem(M)
 		xdm = []
-		ydm = []
 		xgm = []
-		ygm = []
-		for i in range(0, len(x)):
-			if(i%16 == 0) & (i > 0):
+		for i in range(0, len(signal)):
+			if(i%T == 0) & (i > 0):
 				xgm.append(np.mean(xdm))
 				xdm = []
-				ygm.append(np.mean(ydm))
-				ydm = []
-			xaux = x[i]/np.cos(2*np.pi/(16 - i%16))
-			if xaux < 0:
-				xdm.append(xaux + d/2)
-			else:
-				xdm.append(xaux + (d/2 - 1))
-			yaux = y[i]/np.sin(2*np.pi/(16 - i%16))
-			if yaux < 0:
-				ydm.append(yaux + d/2)
-			else:
-				ydm.append(yaux + (d/2 - 1))
+			xaux = signal[i].real/np.cos(2*np.pi + 2*np.pi/(T - i%T)) + 1j*signal[i].imag/np.sin(2*np.pi + 2*np.pi/(T - i%T))
+			xdm.append(xaux)
 		xgm.append(np.mean(xdm))
-		ygm.append(np.mean(ydm))
-		print(pd.DataFrame({"Xdm":xgm, "Ydm":ygm}))
+		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":xgm, "Y":ygm}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
-		bin_x = itob_array(xgm, np.log2(d))
-		bin_y = itob_array(ygm, np.log2(d))
+		r1 = []
+		aux = []
+		for i in range(0, len(xgm), key):
+			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		print(np.array(r1))
 		rec = []
-		for i in range(0, len(bin_x)):
-			for j in bin_x[i]:
-				rec.append(int(j))
-			for j in bin_y[i]:
-				rec.append(int(j))
-		print(np.array(rec))
+		r1 = np.array(r1)
+		for v in r1:
+			for num in v:
+				rec.append(num)
 		return rec
 	
-	def De_MQAM_Entrelac_TV(signal, d):
-		x = signal.real
-		y = signal.imag
-		print(pd.DataFrame({"X":x, "Y":y}))
+	def De_MQAM_Entrelac_TV(signal, key, M, T):
+		modcpy = commod.QAMModem(M)
 		xdm = []
-		ydm = []
 		xgm = []
-		ygm = []
-		for i in range(0, len(x)):
-			if(i%16 == 0) & (i > 0):
+		for i in range(0, len(signal)):
+			if(i%T == 0) & (i > 0):
 				xgm.append(np.mean(xdm))
 				xdm = []
-				ygm.append(np.mean(ydm))
-				ydm = []
-			xaux = x[i]/np.cos(2*np.pi/(16 - i%16))
-			if xaux < 0:
-				xdm.append(xaux + d/2)
-			else:
-				xdm.append(xaux + (d/2 - 1))
-			yaux = y[i]/np.sin(2*np.pi/(16 - i%16))
-			if yaux < 0:
-				ydm.append(yaux + d/2)
-			else:
-				ydm.append(yaux + (d/2 - 1))
+			xaux = signal[i].real/np.cos(2*np.pi/(T - i%T)) + 1j*signal[i].imag/np.sin(2*np.pi/(T - i%T))
+			xdm.append(xaux)
 		xgm.append(np.mean(xdm))
-		ygm.append(np.mean(ydm))
-		print(pd.DataFrame({"Xdm":xgm, "Ydm":ygm}))
+		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":xgm, "Y":ygm}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
-		bin_x = filt.itob_array(xdm, np.log2(d))
-		bin_y = filt.itob_array(ydm, np.log2(d))
-		recm = []
-		for i in range(0, len(bin_x)):
-			aux = []
-			for n in bin_x[i]:
-				aux.append(n)
-			for n in bin_y[y]:
-				aux.append(n)
-			recm.append(aux)
-		rech = np.transpose(np.array(recm))
+		r1 = []
+		aux = []
+		for i in range(0, len(xgm), key):
+			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		print(np.array(r1))
+		rech = np.transpose(np.array(r1))
 		rec = []
 		for vec in rech:
 			for i in vec:
 				rec.append(i)
 		return rec
 
-	def De_MQAM_Entrelac_TH(signal, d):
-		x = signal.real
-		y = signal.imag
-		print(pd.DataFrame({"X":x, "Y":y}))
+	def De_MQAM_Entrelac_TH(signal, key, M, T):
+		modcpy = commod.QAMModem(M)
 		xdm = []
-		ydm = []
 		xgm = []
-		ygm = []
-		for i in range(0, len(x)):
-			if(i%16 == 0) & (i > 0):
+		for i in range(0, len(signal)):
+			if(i%T == 0) & (i > 0):
 				xgm.append(np.mean(xdm))
 				xdm = []
-				ygm.append(np.mean(ydm))
-				ydm = []
-			xaux = x[i]/np.cos(2*np.pi/(16 - i%16))
-			if xaux < 0:
-				xdm.append(xaux + d/2)
-			else:
-				xdm.append(xaux + (d/2 - 1))
-			yaux = y[i]/np.sin(2*np.pi/(16 - i%16))
-			if yaux < 0:
-				ydm.append(yaux + d/2)
-			else:
-				ydm.append(yaux + (d/2 - 1))
+			xaux = signal[i].real/np.cos(2*np.pi/(T - i%T)) + 1j*signal[i].imag/np.sin(2*np.pi/(T - i%T))
+			xdm.append(xaux)
 		xgm.append(np.mean(xdm))
-		ygm.append(np.mean(ydm))
-		print(pd.DataFrame({"Xdm":xgm, "Ydm":ygm}))
+		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":xgm, "Y":ygm}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
-		bin_x = itob_array(xgm, np.log2(d))
-		bin_y = itob_array(ygm, np.log2(d))
-		rec = []
-		for i in range(0, len(bin_x)):
-			aux = []
-			for n in bin_x[i]:
-				aux.append(int(n))
-			for n in bin_y[i]:
-				aux.append(int(n))
-			rec.append(aux)
-		print(np.array(rec))
-		rec2 = np.transpose(np.array(rec))
+		r1 = []
+		aux = []
+		for i in range(0, len(xgm), key):
+			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		print(np.array(r1))
+		rec2 = np.transpose(np.array(r1))
 		print(rec2)
 		recf = []
 		for num in rec2:
 			for i in num:
 				recf.append(i)
-		print(recf)
 		return recf
 
-	def De_MQPSK(signal, M, d):
-		x = signal.real
-		y = signal.imag
-		print(pd.DataFrame({'X':x, 'Y':y}))
-		xdm = []
-		ydm = []
-		xgm = []
+	def De_MQPSK(signal, M, key, T):
+		s = cosFilter(signal.real, False) - sinFilter(signal.imag, True)
+		#print(pd.DataFrame({'X':x, 'Y':y}))
 		ygm = []
-		for i in range(0, len(x)):
-			if(i%16 == 0) & (i > 0):
-				xgm.append(np.mean(xdm))
-				xdm = []
-				ygm.append(np.mean(ydm))
-				ydm = []
-			aux_X = (np.arccos(x[i])/np.pi)**(-1)
-			if aux_X < 0:
-				xdm.append(aux_X + d/2)
-			else:
-				xdm.append(aux_X + (d/2 - 1))
-			aux_Y = (np.arcsin(-y[i])/np.pi)**(-1)
-			if aux_Y < 0:
-				ydm.append(aux_Y + d/2)
-			else:
-				ydm.append(aux_Y + (d/2 - 1))
-			print(f"{aux_X} | {aux_Y}")
-		xgm.append(np.mean(xdm))
-		ygm.append(np.mean(ydm))
-		print(pd.DataFrame({"Xgm":xgm, "Ygm":ygm}))
+		for i in range(0, len(s), T):
+			ygm.append(np.mean(s[i:i+key]))
+			#print(f"{aux_X} | {aux_Y}")
+		print(pd.DataFrame({"Xgm":np.array(ygm).real, "Ygm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":xgm, "Y":ygm}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstituído")
 		plt.show()
-		bin_x = filt.itob_array(xgm, np.log2(d))
-		bin_y = filt.itob_array(ygm, np.log2(d))
-		rec = []
-		for i in range(0, len(bin_x)):
-			for j in bin_x[i]:
-				rec.append(j)
-			for j in bin_y[i]:
-				rec.append(j)
-		print(np.array(rec))
-		return rec
-
+		for i in range(0, len(xgm), key):
+			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		print(np.array(r1))
+		return np.array(r1)

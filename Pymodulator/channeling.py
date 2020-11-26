@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 class Noising:
 	def WhiteNoiseGenerator(sm, snr, Ps, s_len):
-		Pr = Ps/snr
+		Pr = 10**((snr/np.log10(Ps))**(-1))
 		n = np.random.randint(6, size=s_len)
 		csm = []
 		for i in range(0, len(n)):
@@ -22,6 +22,18 @@ class DeNoising:
 	def Thermic_Filter():
 		print("não implementado")
 		#remoção ou atenuação de ruído térmico
-	def AWGN_Filter():
+	def AWGN_Filter(signal, key, snr, pr, ps):
+		x = signal.real
+		y = signal.imag
+		xf = []
+		for n in range(0, len(x), key):
+			aux = x[n:n+key]
+			xf.append([np.mean(aux), np.std(aux), np.log10(np.mean(aux))/snr])
+		yf = []
+		for n in range(0, len(y), key):
+			aux = y[n:n+key]
+			yf.append([np.mean(aux), np.std(aux), np.log10(np.mean(aux))/snr])
+			
+			
 		print("não implementado")
 		#remoção ou atenuação de ruído branco

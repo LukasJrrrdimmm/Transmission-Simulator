@@ -259,7 +259,7 @@ class Modulations:
 		plt.show()
 		s = []
 		gs = pskf.cosAdjust(np.array(a2).real) - pskf.sinAdjust(np.array(a2).imag)*1j
-		for a in np.array(a2):
+		for a in gs:
 			j = T
 			while j > 0:
 				s.append(a)
@@ -454,7 +454,7 @@ class Demodulations:
 		return recf
 
 	def De_MQPSK(signal, M, key, T):
-		s = cosFilter(signal.real, False) - sinFilter(signal.imag, True)
+		s = pskf.cosFilter(signal.real, False) - pskf.sinFilter(signal.imag, True)
 		#print(pd.DataFrame({'X':x, 'Y':y}))
 		ygm = []
 		for i in range(0, len(s), T):

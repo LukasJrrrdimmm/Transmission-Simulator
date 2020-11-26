@@ -1,10 +1,7 @@
 import numpy as np
 
 def sinAdjust(y):
-	f = []
-	for s in y:
-		f.append(np.sin(np.pi/s))
-	return np.array(f)
+	return np.sin(np.pi/y)
 
 def cosAdjust(x):
 	f = []
@@ -20,17 +17,17 @@ def cosAdjust(x):
 def sinFilter(y, c_flag):
 	res = []
 	for s in y:
-		if s < 10**-5:
-			if s > 0:
+		if abs(s) < (10**(-8)):
+			if s > 0.0:
 				res.append(1)
 			else:
 				res.append(-1)
 		else:
 			res.append((np.arcsin(s)/np.pi)**(-1))
-		if c_flag is True:
-			res = np.array(res)*1j
-		else:
-			res = np.array(res)
+	if c_flag is True:
+		res = np.array(res)*1j
+	else:
+		res = np.array(res)
 	return res
 
 def cosFilter(x, flag):

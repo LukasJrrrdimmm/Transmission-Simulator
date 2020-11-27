@@ -111,7 +111,7 @@ class GRAY:
 		plt.show()
 
 class Modulations:
-	def NPAM(v, N): #Geração do Sinal NPAM
+	def MPAM(v, M):
 		i = 0
 		dec = ""
 		bin_arr = []
@@ -123,6 +123,11 @@ class Modulations:
 				bin_arr.append(dec)
 				dec = ""
 		return bin_arr
+"""
+v = mensagem de Entrada
+M = nº da modulação
+T = periodo do quadro
+"""
 	def MQAM_Entrelac_TH(v, M, T): # Geração do sinal MQAM Entrelaçado tipo A
 		dec = ""
 		bin_arr_x0 = []
@@ -159,6 +164,11 @@ class Modulations:
 					a.imag*np.sin((2*np.pi)/t)*1j)
 				t -= 1
 		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+"""
+v = mensagem de Entrada
+M = nº da modulação
+T = periodo do quadro
+"""
 	def MQAM_Entrelac_TV(v, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
 		dec = ""
 		bin_arr_x0 = []
@@ -196,6 +206,11 @@ class Modulations:
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
 		return np.array(s), l1
+"""
+v = mensagem de Entrada
+M = nº da modulação
+T = periodo do quadro
+"""
 	def MQAM(v, M, T): # Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
@@ -231,6 +246,11 @@ class Modulations:
 				j -= 1
 		print(f"key = {l1}")
 		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+"""
+v = mensagem de Entrada
+M = nº da modulação
+T = periodo do quadro
+"""
 	def MQPSK(v, M, T): #Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
@@ -368,6 +388,12 @@ class Demodulations:
 				c -= 1
 			rs.append(aux_xa + aux_xb)
 		print(np.array(rs))
+"""
+signal = sinal modulado
+M = nº da modulação
+key = chave de desentrelaçamento da constelação
+T = período do cada quadro
+"""
 	def De_MQAM(signal, key, M, T):
 		modcpy = commod.QAMModem(M)
 		xdm = []
@@ -395,7 +421,12 @@ class Demodulations:
 			for num in v:
 				rec.append(num)
 		return rec
-	
+"""
+signal = sinal modulado
+M = nº da modulação
+key = chave de desentrelaçamento da constelação
+T = período do cada quadro
+"""	
 	def De_MQAM_Entrelac_TV(signal, key, M, T):
 		modcpy = commod.QAMModem(M)
 		xdm = []
@@ -423,7 +454,12 @@ class Demodulations:
 			for i in vec:
 				rec.append(i)
 		return rec
-
+"""
+signal = sinal modulado
+M = nº da modulação
+key = chave de desentrelaçamento da constelação
+T = período do cada quadro
+"""
 	def De_MQAM_Entrelac_TH(signal, key, M, T):
 		modcpy = commod.QAMModem(M)
 		xdm = []
@@ -452,7 +488,12 @@ class Demodulations:
 			for i in num:
 				recf.append(i)
 		return recf
-
+"""
+signal = sinal modulado
+M = nº da modulação
+key = chave de desentrelaçamento da constelação
+T = período do cada quadro
+"""
 	def De_MQPSK(signal, M, key, T):
 		s = pskf.cosFilter(signal.real, False) - pskf.sinFilter(signal.imag, True)
 		#print(pd.DataFrame({'X':x, 'Y':y}))
@@ -465,7 +506,7 @@ class Demodulations:
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstituído")
 		plt.show()
-		for i in range(0, len(xgm), key):
-			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		for i in range(0, len(ygm), key):
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
 		print(np.array(r1))
 		return np.array(r1)

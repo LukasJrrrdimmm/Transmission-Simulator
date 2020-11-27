@@ -22,18 +22,28 @@ class DeNoising:
 	def Thermic_Filter():
 		print("não implementado")
 		#remoção ou atenuação de ruído térmico
-	def AWGN_Filter(signal, key, snr, pr, ps):
-		x = signal.real
-		y = signal.imag
-		xf = []
-		for n in range(0, len(x), key):
-			aux = x[n:n+key]
-			xf.append([np.mean(aux), np.std(aux), np.log10(np.mean(aux))/snr])
-		yf = []
-		for n in range(0, len(y), key):
-			aux = y[n:n+key]
-			yf.append([np.mean(aux), np.std(aux), np.log10(np.mean(aux))/snr])
-			
-			
-		print("não implementado")
-		#remoção ou atenuação de ruído branco
+	"""
+	signal = sinal AWGN
+	key = Período do Quadro
+	SF = fator do sinal = abs(min(s)) == abs(max(s))
+	Quanto maior o período mais fácil a filtragem
+	"""
+	def AWGN_Filter(signal, T, sf):
+		if T < 8:
+			print("é impossível filtrar, período (T) muito curto")
+			return signal
+		else:
+			x = signal.real
+			y = signal.imag
+			dAe = abs(abs(min(x)) - abs(max(x)))
+			reduxf = (dAe/sf)*(-1)
+			xf = []
+			for n in range(0, len(x), key):
+				aux = x[n:n+key]
+				xf.append((np.avr(aux) - dAe)/sf.real)
+			yf = []
+			for n in range(0, len(y), key):
+				aux = y[n:n+key]
+				yf.append((np.avr(aux) - dAe)/sf.imag)
+			#remoção ou atenuação de ruído branco
+			return np.array(xf) + np.array(yf)*1j

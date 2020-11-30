@@ -50,13 +50,13 @@ def itob_array(v, N):
 	print(bin_vec)
 	return bin_vec
 
-def Generic_Carrier(bp):
+def Generic_Carrier(T):
+	bp=0.01
 	sp=bp*2    #symbol period for M-array QAM
 	sr=1/sp    #symbol rate
 	f=sr*2     #carry frequency 
-	t=np.arange(sp/100, sp, sp/100)
-	ss=len(t)
-	return t, ss, f
+	t=np.arange(0, sp, sp/T)
+	return t, f
 
 def QuadratureDecoder(v, N):
 	s = ''
@@ -111,7 +111,7 @@ class GRAY:
 		plt.show()
 
 class Modulations:
-	def MPAM(v, M):
+	def MQPAM(v, M, T):
 		i = 0
 		dec = ""
 		bin_arr = []
@@ -123,12 +123,12 @@ class Modulations:
 				bin_arr.append(dec)
 				dec = ""
 		return bin_arr
-"""
-v = mensagem de Entrada
-M = nº da modulação
-T = periodo do quadro
-"""
 	def MQAM_Entrelac_TH(v, M, T): # Geração do sinal MQAM Entrelaçado tipo A
+		"""
+		v = mensagem de Entrada
+		M = nº da modulação
+		T = periodo do quadro
+		"""
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -142,7 +142,7 @@ T = periodo do quadro
 		aux = np.transpose(np.array(bin_arr_x0)) # transposição do vetor
 		print(aux)
 		a2 = []
-		modcpy = commod.QAMModem(lim)
+		modcpy = commod.QAMModem(M)
 		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
@@ -150,26 +150,28 @@ T = periodo do quadro
 			l1 = len(d1)
 			for i in d1:
 				a2.append(i)
-		print(np.array(a2))
-		
+		a2 = np.array(a2)
+		qam_real = a2.real
+		qam_img = a2.imag
+		m = []
+		f, t = Generic_Carrier(T)
+		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
-		plt.title("Pre-Mod Contellated")
+		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
+		plt.title("Pre-Mod Constellated")
 		plt.show()
-		s = []
-		for a in np.array(a2): # modulação : comnversão para a forma de onda representada com o período T = 16
-			t = T
-			while t > 0:
-				s.append(a.real*np.cos((2*np.pi)/t) + 
-					a.imag*np.sin((2*np.pi)/t)*1j)
-				t -= 1
-		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
-"""
-v = mensagem de Entrada
-M = nº da modulação
-T = periodo do quadro
-"""
+		for k in range(0,len(qam_real)):
+			yr=qam_real[k]*np.cos(2*np.pi*f*t)
+			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
+			y=[a + b for a, b in zip(yr, yim*j)]
+			m = m + y
+		return np.array(m), l1, lim
 	def MQAM_Entrelac_TV(v, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
+		"""
+		v = mensagem de Entrada
+		M = nº da modulação
+		T = periodo do quadro
+		"""
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -185,58 +187,77 @@ T = periodo do quadro
 		a2 = []
 		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
-		modcpy = commod.QAMModem(lim)
+		modcpy = commod.QAMModem(M)
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
 			d1 = modcpy.modulate(b)
 			l1 = len(d1)
 			for i in d1:
 				a2.append(i)
-		print(np.array(a2))
-		
+		a2 = np.array(a2)
+		qam_real = a2.real
+		qam_img = a2.imag
+		m = []
+		f, t = Generic_Carrier(T)
+		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
+		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
 		plt.title("Pre-Mod Constellated")
 		plt.show()
-		s = []
-		for a in np.array(a2): # modulação
-			j = T
-			while j > 0:
-				s.append(a.real*np.cos((2*np.pi)/j) + 
-					a.imag*np.sin((2*np.pi)/j)*1j)
-				j -= 1
-		return np.array(s), l1
-"""
-v = mensagem de Entrada
-M = nº da modulação
-T = periodo do quadro
-"""
+		for k in range(0,len(qam_real)):
+			yr=qam_real[k]*np.cos(2*np.pi*f*t)
+			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
+			y=[a + b for a, b in zip(yr, yim)]
+			m = m + y
+		return m
+
 	def MQAM(v, M, T): # Geração do sinal MQAM
+		"""
+		v = mensagem de Entrada
+		M = nº da modulação
+		T = periodo do quadro
+		"""
+		modcpy = commod.QAMModem(M)
+		a2 = modcpy.modulate(v)
+		qam_real = a2.real
+		qam_img = a2.imag
+		m = []
+		f, t = Generic_Carrier(T)
+		print(f"{f} , {t}")
+		sns.set_style("whitegrid")
+		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
+		plt.title("Pre-Mod Constellated")
+		plt.show()
+		for k in range(0,len(qam_real)):
+			yr=qam_real[k]*np.cos(2*np.pi*f*t)
+			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
+			y=[a + b for a, b in zip(yr, yim*1j)]
+			m = m+y
+		#print(m)
+		"""
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
 		print(f"{lim} | {len(v)}")
 		print(np.array(v))
-		for i in range(0, len(v), int(lim)): # Divisão do vetor
-			bin_arr_x0.append(np.array(v[i : i + int(lim)]))
+		for i in range(0, len(v), int(M)): # Divisão do vetor
+			bin_arr_x0.append(np.array(v[i : i + int(M)]))
 		aux = np.array(bin_arr_x0) # transposição do vetor
 		print(aux)
 		a2 = []
-		modcpy = commod.QAMModem(lim)
+		modcpy = commod.QAMModem(v)
 		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
-			aux = modcpy.modulate(b)
-			l1 = len(aux)
-			for num in aux:
+			aux2 = modcpy.modulate(b)
+			l1 = len(aux2)
+			for num in aux2:
 				a2.append(num)
 			
 		print(np.array(a2))
-
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(a2).real, "Y":np.array(a2).imag}).plot(subplots=True)
-		plt.title("Pre-Mod Constellated")
-		plt.show()
+		
+		
+		
 		s = []
 		for a in np.array(a2): # modulação
 			j = T
@@ -245,13 +266,14 @@ T = periodo do quadro
 					a.imag*np.sin(2*np.pi + (2*np.pi/j))*1j)
 				j -= 1
 		print(f"key = {l1}")
-		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
-"""
-v = mensagem de Entrada
-M = nº da modulação
-T = periodo do quadro
-"""
+		"""
+		return m
 	def MQPSK(v, M, T): #Geração do sinal MQAM
+		"""
+		v = mensagem de Entrada
+		M = nº da modulação
+		T = periodo do quadro
+		"""
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -284,7 +306,7 @@ T = periodo do quadro
 			while j > 0:
 				s.append(a)
 				j -= 1
-		return np.array(s), l1, lim, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+		return nps, l1
 # signal, key, M, f1, f2
 class PassFilters:
 	def RcossineFilter(s, f, f1, B):
@@ -388,56 +410,72 @@ class Demodulations:
 				c -= 1
 			rs.append(aux_xa + aux_xb)
 		print(np.array(rs))
-"""
-signal = sinal modulado
-M = nº da modulação
-key = chave de desentrelaçamento da constelação
-T = período do cada quadro
-"""
-	def De_MQAM(signal, key, M, T):
+	def De_MQAM(signal, M, T):
+		"""
+		signal = sinal modulado
+		M = nº da modulação
+		key = chave de desentrelaçamento da constelação
+		T = período do cada quadro
+		"""
+		f, t = Generic_Carrier(T)
 		modcpy = commod.QAMModem(M)
-		xdm = []
 		xgm = []
-		for i in range(0, len(signal)):
-			if(i%T == 0) & (i > 0):
-				xgm.append(np.mean(xdm))
-				xdm = []
-			xaux = signal[i].real/np.cos(2*np.pi + 2*np.pi/(T - i%T)) + 1j*signal[i].imag/np.sin(2*np.pi + 2*np.pi/(T - i%T))
-			xdm.append(xaux)
-		xgm.append(np.mean(xdm))
+		ygm = []
+		c1 = np.cos(2*np.pi*f*t)
+		c2 = np.sin(2*np.pi*f*t)
+		for i in range(0, len(signal), len(c1)):
+			#print(signal[i:i+len(c1)].real)
+			g = (signal[i:i+len(c1)].real)/c1
+			g1 = []
+			for n in g:
+				if str(n) != 'nan':
+					g1.append(n)
+			h = (signal[i:i+len(c1)].imag)/c2
+			h1 = []
+			for n in h:
+				if str(n) != 'nan':
+					h1.append(n)
+			print(g1)
+			print(h1)
+			print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
+			xgm.append(np.mean(g1) + 1j*np.mean(h1))
 		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
-		r1 = []
-		aux = []
-		for i in range(0, len(xgm), key):
-			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		r1 = modcpy.demodulate(xgm, demod_type="hard")
 		print(np.array(r1))
-		rec = []
-		r1 = np.array(r1)
-		for v in r1:
-			for num in v:
-				rec.append(num)
-		return rec
-"""
-signal = sinal modulado
-M = nº da modulação
-key = chave de desentrelaçamento da constelação
-T = período do cada quadro
-"""	
+		return np.array(r1)
 	def De_MQAM_Entrelac_TV(signal, key, M, T):
+		"""
+		signal = sinal modulado
+		M = nº da modulação
+		key = chave de desentrelaçamento da constelação
+		T = período do cada quadro
+		"""	
+		f, t = Generic_Carrier(T)
 		modcpy = commod.QAMModem(M)
-		xdm = []
 		xgm = []
-		for i in range(0, len(signal)):
-			if(i%T == 0) & (i > 0):
-				xgm.append(np.mean(xdm))
-				xdm = []
-			xaux = signal[i].real/np.cos(2*np.pi/(T - i%T)) + 1j*signal[i].imag/np.sin(2*np.pi/(T - i%T))
-			xdm.append(xaux)
-		xgm.append(np.mean(xdm))
+		ygm = []
+		c1 = np.cos(2*np.pi*f*t)
+		c2 = np.sin(2*np.pi*f*t)
+		for i in range(0, len(signal), len(c1)):
+			#print(signal[i:i+len(c1)].real)
+			g = (signal[i:i+len(c1)].real)/c1
+			g1 = []
+			for n in g:
+				if str(n) != 'nan':
+					g1.append(n)
+			h = (signal[i:i+len(c1)].imag)/c2
+			h1 = []
+			for n in h:
+				if str(n) != 'nan':
+					h1.append(n)
+			print(g1)
+			print(h1)
+			print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
+			xgm.append(np.mean(g1) + 1j*np.mean(h1))
 		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
@@ -454,23 +492,35 @@ T = período do cada quadro
 			for i in vec:
 				rec.append(i)
 		return rec
-"""
-signal = sinal modulado
-M = nº da modulação
-key = chave de desentrelaçamento da constelação
-T = período do cada quadro
-"""
 	def De_MQAM_Entrelac_TH(signal, key, M, T):
+		"""
+		signal = sinal modulado
+		M = nº da modulação
+		key = chave de desentrelaçamento da constelação
+		T = período do cada quadro
+		"""
+		f, t = Generic_Carrier(T)
 		modcpy = commod.QAMModem(M)
-		xdm = []
 		xgm = []
-		for i in range(0, len(signal)):
-			if(i%T == 0) & (i > 0):
-				xgm.append(np.mean(xdm))
-				xdm = []
-			xaux = signal[i].real/np.cos(2*np.pi/(T - i%T)) + 1j*signal[i].imag/np.sin(2*np.pi/(T - i%T))
-			xdm.append(xaux)
-		xgm.append(np.mean(xdm))
+		ygm = []
+		c1 = np.cos(2*np.pi*f*t)
+		c2 = np.sin(2*np.pi*f*t)
+		for i in range(0, len(signal), len(c1)):
+			#print(signal[i:i+len(c1)].real)
+			g = (signal[i:i+len(c1)].real)/c1
+			g1 = []
+			for n in g:
+				if str(n) != 'nan':
+					g1.append(n)
+			h = (signal[i:i+len(c1)].imag)/c2
+			h1 = []
+			for n in h:
+				if str(n) != 'nan':
+					h1.append(n)
+			print(g1)
+			print(h1)
+			print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
+			xgm.append(np.mean(g1) + 1j*np.mean(h1))
 		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
@@ -488,13 +538,13 @@ T = período do cada quadro
 			for i in num:
 				recf.append(i)
 		return recf
-"""
-signal = sinal modulado
-M = nº da modulação
-key = chave de desentrelaçamento da constelação
-T = período do cada quadro
-"""
 	def De_MQPSK(signal, M, key, T):
+		"""
+		signal = sinal modulado
+		M = nº da modulação
+		key = chave de desentrelaçamento da constelação
+		T = período do cada quadro
+		"""
 		s = pskf.cosFilter(signal.real, False) - pskf.sinFilter(signal.imag, True)
 		#print(pd.DataFrame({'X':x, 'Y':y}))
 		ygm = []

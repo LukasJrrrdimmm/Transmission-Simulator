@@ -1,9 +1,17 @@
 import numpy as np
 import pandas as pd
+#
+#
 class Noising:
-	def WhiteNoiseGenerator(sm, snr, Ps, s_len):
-		Pr = 10**((snr/np.log10(Ps))**(-1))
-		n = np.random.randint(6, size=s_len)
+	def WhiteNoiseGenerator(sm, snr):
+		Pf = np.std(sm.real)**2
+		Pq = np.std(sm.imag)**2
+		f = Pf - Pq
+		print("Ps = {}".format(f))
+		if(f < 0):
+			f = abs(f)
+		Pr = f*((10**(snr/10))**(-1))
+		n = np.random.randint(6, size=np.size(sm))# tornar potência 1
 		csm = []
 		for i in range(0, len(n)):
 			csm.append(sm[i] + n[i]*Pr)

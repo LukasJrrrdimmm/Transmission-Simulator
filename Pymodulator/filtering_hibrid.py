@@ -111,7 +111,7 @@ class GRAY:
 		plt.show()
 
 class Modulations:
-	def MQPAM(v, M, T):
+	def MPAM(v, M, T):
 		i = 0
 		dec = ""
 		bin_arr = []
@@ -123,7 +123,7 @@ class Modulations:
 				bin_arr.append(dec)
 				dec = ""
 		return bin_arr
-	def MQAM_Entrelac_TH(v, M, T): # Geração do sinal MQAM Entrelaçado tipo A
+	def MQAM_Entrelac_TH(v, sz, M, T): # Geração do sinal MQAM Entrelaçado tipo A
 		"""
 		v = mensagem de Entrada
 		M = nº da modulação
@@ -131,7 +131,7 @@ class Modulations:
 		"""
 		dec = ""
 		bin_arr_x0 = []
-		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(sz)) # Execução do logarítimo para iteração
 		if lim > 64: # (M <= 64)
 			lim = 64
 		print("M = {}QAM".format(lim))
@@ -163,10 +163,10 @@ class Modulations:
 		for k in range(0,len(qam_real)):
 			yr=qam_real[k]*np.cos(2*np.pi*f*t)
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
-			y=[a + b for a, b in zip(yr, yim*j)]
+			y=[a + b for a, b in zip(yr, yim*1j)]
 			m = m + y
-		return np.array(m), l1, lim
-	def MQAM_Entrelac_TV(v, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
+		return np.array(m), l1
+	def MQAM_Entrelac_TV(v, sz, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
 		"""
 		v = mensagem de Entrada
 		M = nº da modulação
@@ -174,7 +174,7 @@ class Modulations:
 		"""
 		dec = ""
 		bin_arr_x0 = []
-		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(sz)) # Execução do logarítimo para iteração
 		if lim > 16: # (M <= 256)
 			lim = 16
 		print("M = {}QAM".format(lim))
@@ -207,9 +207,9 @@ class Modulations:
 		for k in range(0,len(qam_real)):
 			yr=qam_real[k]*np.cos(2*np.pi*f*t)
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
-			y=[a + b for a, b in zip(yr, yim)]
+			y=[a + b for a, b in zip(yr, yim*1j)]
 			m = m + y
-		return m
+		return np.array(m), l1
 
 	def MQAM(v, M, T): # Geração do sinal MQAM
 		"""
@@ -268,7 +268,7 @@ class Modulations:
 		print(f"key = {l1}")
 		"""
 		return m
-	def MQPSK(v, M, T): #Geração do sinal MQAM
+	def MQPSK(v, sz, M, T): #Geração do sinal MQAM
 		"""
 		v = mensagem de Entrada
 		M = nº da modulação
@@ -284,7 +284,7 @@ class Modulations:
 		aux = np.array(bin_arr_x0) # transposição do vetor
 		a2 = []
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
-		modcpy = commod.QAMModem(lim)
+		modcpy = commod.QAMModem(M)
 		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		for b in aux: # mapeamento dos bits
@@ -306,7 +306,7 @@ class Modulations:
 			while j > 0:
 				s.append(a)
 				j -= 1
-		return nps, l1
+		return np.array(s), l1
 # signal, key, M, f1, f2
 class PassFilters:
 	def RcossineFilter(s, f, f1, B):

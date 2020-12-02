@@ -10,8 +10,6 @@ import filtering_hibrid as filt
 def test_mqam(sd, rg, M, T): # MQAM Tradicional
 	e = filt.binary_generator(sd, rg)
 	s = np.array(filt.Modulations.MQAM(e, M, T)) # modulação
-	
-	
 	'''sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -28,19 +26,11 @@ def test_mqam(sd, rg, M, T): # MQAM Tradicional
 	plt.show()
 	rec = filt.Demodulations.De_MQAM(s, M, T)
 	rec = np.array(rec)
-	print("diff = {}".format(len([(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
-	plt.show()
-def test_mqamEntrelac_A(sd, rg, T): #MQAM Entrelqaçado Tipo A
+	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
+def test_mqamEntrelac_A(sd, rg, M, T): #MQAM Entrelqaçado Tipo A
 	e = filt.binary_generator(sd, rg)
-	s, key, M, f1, f2 = filt.Modulations.MQAM_Entrelac_TH(e, 2**rg, T) # modulação
-	Pf = f1[0]/2
-	Pq = f2[0]/2
-	f = Pf + Pq/2
-	print("Ps = {}".format(f))
-	if(f < 0):
-		f = abs(f)
-	g = np.size(s)
-	cs = Chan_N.WhiteNoiseGenerator(s, 3.6, f, g)
+	s, key, = filt.Modulations.MQAM_Entrelac_TH(e, 2**rg, M, T) # modulação
+	cs = Chan_N.WhiteNoiseGenerator(s, 3.6)
 	'''sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -57,13 +47,10 @@ def test_mqamEntrelac_A(sd, rg, T): #MQAM Entrelqaçado Tipo A
 	plt.title("MQAM")
 	plt.show()
 	rec = filt.Demodulations.De_MQAM_Entrelac_TH(s, key, M, T)
-	sns.set_style("whitegrid")
-	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
-	plt.title("Sinal Reconstituido")
-	plt.show()
-def test_mqamEntrelac_B(sd, rg, T): #MQAM Entrelaçado Tipo B
+	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
+def test_mqamEntrelac_B(sd, rg, M, T): #MQAM Entrelaçado Tipo B
 	e = filt.binary_generator(sd, rg)
-	s, key, M, f1, f2 = filt.Modulations.MQAM_Entrelac_TV(e, 2**rg, T) # modulação
+	s, key = filt.Modulations.MQAM_Entrelac_TV(e, 2**rg, M, T) # modulação
 	'''sns.set_style("whitegrid")
 	plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
@@ -74,14 +61,11 @@ def test_mqamEntrelac_B(sd, rg, T): #MQAM Entrelaçado Tipo B
 		"Sinal Completo":(s.real - s.imag)}).plot(subplots=True)
 	plt.title("MQAM")
 	plt.show()
-	rec = filt.Demodulations.De_MQAM(s, key, M, T)
-	sns.set_style("whitegrid")
-	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
-	plt.title("Sinal Reconstituido")
-	plt.show()
-def test_mqpsk(sd, rg, T): # MQPSK
+	rec = filt.Demodulations.De_MQAM_Entrelac_TV(s, key, M, T)
+	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
+def test_mqpsk(sd, rg, M, T): # MQPSK
 	e = filt.binary_generator(sd, rg)
-	s, key = filt.Modulations.MQPSK(e, 2**rg, T)
+	s, key = filt.Modulations.MQPSK(e, 2**rg, M, T)
 	sns.set_style("whitegrid")
 	pd.DataFrame({"Sinal Completo":(s.real - s.imag)}).plot()
 	plt.title("MQPSK Mod Signal")
@@ -98,7 +82,4 @@ def test_mqpsk(sd, rg, T): # MQPSK
 	plt.title("MQPSK AWGN")
 	plt.show()
 	rec = filt.Demodulations.De_MQPSK(s, key, M, T)
-	sns.set_style("whitegrid")
-	pd.DataFrame({"Original":e, "Reconstitution":rec}).plot(subplots=True)
-	plt.title("Sinal Reconstituido")
-	plt.show()
+	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))

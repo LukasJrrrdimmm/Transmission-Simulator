@@ -2,6 +2,7 @@ import math as mth
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import mirror_constellation as mc
 import seaborn as sns
 
 def binary_generator(s, N):
@@ -101,7 +102,7 @@ class GRAY:
 		plt.show()
 
 class Modulations:
-	def NPAM(v, N): #Geração do Sinal NPAM
+	def MPAM(v, N): #Geração do Sinal NPAM
 		i = 0
 		dec = ""
 		bin_arr = []
@@ -113,10 +114,10 @@ class Modulations:
 				bin_arr.append(dec)
 				dec = ""
 		return bin_arr
-	def MQAM_Entrelac_TH(v, M): # Geração do sinal MQAM Entrelaçado tipo A
+	def MQASK_Entrelac_TH(v, sz, M, T): # Geração do sinal MQAM Entrelaçado tipo A
 		dec = ""
 		bin_arr_x0 = []
-		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
+		lim = max2pow(np.log2(sz)) # Execução do logarítimo para iteração
 		if lim > 16: # (M <= 256)
 			lim = 16
 		print("M = {}QAM".format(lim))
@@ -168,8 +169,8 @@ class Modulations:
 				s.append(a.real*np.cos((2*np.pi)/j) + 
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
-		return np.array(s), d, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
-	def MQAM_Entrelac_TV(v, M): # Geração do sinal MQAM Entrelaçado Tipo B
+		return np.array(s), key
+	def MQASK_Entrelac_TH(v, M): # Geração do sinal MQAM Entrelaçado Tipo B
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -221,8 +222,8 @@ class Modulations:
 				s.append(a.real*np.cos((2*np.pi)/j) + 
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
-		return np.array(s), d
-	def MQAM(v, M): # Geração do sinal MQAM
+		return np.array(s), key
+	def MQASK(v, M): # Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []
 		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -273,7 +274,7 @@ class Modulations:
 				s.append(a.real*np.cos((2*np.pi)/j) + 
 					a.imag*np.sin((2*np.pi)/j)*1j)
 				j -= 1
-		return np.array(s), d, [np.mean(np.array(a2).real), np.std(np.array(a2).real)], [np.mean(np.array(a2).imag), np.std(np.array(a2).imag)]
+		return np.array(s), key
 	def MQPSK(v, M): #Geração do sinal MQAM
 		dec = ""
 		bin_arr_x0 = []

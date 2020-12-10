@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import commpy.modulation as commod
 import mpskadjust as pskf
+import carrier as crr
 
 def binary_generator(s, N):
 		return np.random.randint(2, size = s**N)
@@ -50,13 +51,7 @@ def itob_array(v, N):
 	print(bin_vec)
 	return bin_vec
 
-def Generic_Carrier(T):
-	bp=0.01
-	sp=bp*2    #symbol period for M-array QAM
-	sr=1/sp    #symbol rate
-	f=sr*2     #carry frequency 
-	t=np.arange(0, sp, sp/T)
-	return t, f
+
 
 def QuadratureDecoder(v, N):
 	s = ''
@@ -154,7 +149,7 @@ class Modulations:
 		qam_real = a2.real
 		qam_img = a2.imag
 		m = []
-		f, t = Generic_Carrier(T)
+		f, t = crr.Generic_Carrier(T)
 		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
@@ -165,7 +160,8 @@ class Modulations:
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
 			y=[a + b for a, b in zip(yr, yim*1j)]
 			m = m + y
-		return np.array(m), l1
+		c1 = np.cos(2*np.pi*f*t)
+		return np.array(m), l1, len(c1)
 	def MQAM_Entrelac_TV(v, sz, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
 		"""
 		v = mensagem de Entrada
@@ -198,7 +194,7 @@ class Modulations:
 		qam_real = a2.real
 		qam_img = a2.imag
 		m = []
-		f, t = Generic_Carrier(T)
+		f, t = crr.Generic_Carrier(T)
 		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
@@ -209,7 +205,8 @@ class Modulations:
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
 			y=[a + b for a, b in zip(yr, yim*1j)]
 			m = m + y
-		return np.array(m), l1
+		c1 = np.cos(2*np.pi*f*t)
+		return np.array(m), l1, len(c1)
 
 	def MQAM(v, M, T): # Geração do sinal MQAM
 		"""
@@ -222,7 +219,9 @@ class Modulations:
 		qam_real = a2.real
 		qam_img = a2.imag
 		m = []
-		f, t = Generic_Carrier(T)
+		q = []
+		i = []
+		f, t = crr.Generic_Carrier(T)
 		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
@@ -231,68 +230,25 @@ class Modulations:
 		for k in range(0,len(qam_real)):
 			yr=qam_real[k]*np.cos(2*np.pi*f*t)
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
-			y=[a + b for a, b in zip(yr, yim*1j)]
+			y=[a + b for a, b in zip(yr, yim)]
 			m = m+y
-		#print(m)
-		"""
-		dec = ""
-		bin_arr_x0 = []
-		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
-		print(f"{lim} | {len(v)}")
-		print(np.array(v))
-		for i in range(0, len(v), int(M)): # Divisão do vetor
-			bin_arr_x0.append(np.array(v[i : i + int(M)]))
-		aux = np.array(bin_arr_x0) # transposição do vetor
-		print(aux)
-		a2 = []
-		modcpy = commod.QAMModem(v)
-		l1 = 0
-		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
-		for b in aux: # mapeamento dos bits
-			aux2 = modcpy.modulate(b)
-			l1 = len(aux2)
-			for num in aux2:
-				a2.append(num)
-			
-		print(np.array(a2))
-		
-		
-		
-		s = []
-		for a in np.array(a2): # modulação
-			j = T
-			while j > 0:
-				s.append(a.real*np.cos(2*np.pi + (2*np.pi)/j) + 
-					a.imag*np.sin(2*np.pi + (2*np.pi/j))*1j)
-				j -= 1
-		print(f"key = {l1}")
-		"""
-		return m
+			q = q + list(yr)
+			i = i + list(yim)
+		c1 = np.cos(2*np.pi*f*t)
+		return np.array(m), np.array(q), np.array(i)# s(t), T
 	def MQPSK(v, sz, M, T): #Geração do sinal MQAM
 		"""
 		v = mensagem de Entrada
+		sz = tamanho da mensagem
 		M = nº da modulação
 		T = periodo do quadro
 		"""
 		dec = ""
-		bin_arr_x0 = []
-		lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
-		print(f"{lim} | {len(v)}")
 		print(np.array(v))
-		for i in range(0, len(v), int(lim)): # Divisão do vetor
-			bin_arr_x0.append(np.array(v[i : i + int(lim)]))
-		aux = np.array(bin_arr_x0) # transposição do vetor
-		a2 = []
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		modcpy = commod.QAMModem(M)
-		l1 = 0
 		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
-		for b in aux: # mapeamento dos bits
-			aux = modcpy.modulate(b)
-			l1 = len(aux)
-			for num in aux:
-				a2.append(num)
-			
+		a2 = modcpy.modulate(v)
 		print(np.array(a2))
 
 		sns.set_style("whitegrid")
@@ -300,13 +256,11 @@ class Modulations:
 		plt.title("Pre-Mod Constellated")
 		plt.show()
 		s = []
-		gs = pskf.cosAdjust(np.array(a2).real) - pskf.sinAdjust(np.array(a2).imag)*1j
-		for a in gs:
-			j = T
-			while j > 0:
-				s.append(a)
-				j -= 1
-		return np.array(s), l1
+		gs = pskf.cosAdjust(np.array(a2).real, T, M) + pskf.sinAdjust(np.array(a2).imag, T, M)*1j
+		print(np.array(gs))
+		f, t = crr.Generic_Carrier(T)
+		c1 = np.cos(2*np.pi*f*t)
+		return np.array(gs), len(c1)
 # signal, key, M, f1, f2
 class PassFilters:
 	def RcossineFilter(s, f, f1, B):
@@ -417,34 +371,14 @@ class Demodulations:
 		key = chave de desentrelaçamento da constelação
 		T = período do cada quadro
 		"""
-		f, t = Generic_Carrier(T)
 		modcpy = commod.QAMModem(M)
-		xgm = []
-		ygm = []
-		c1 = np.cos(2*np.pi*f*t)
-		c2 = np.sin(2*np.pi*f*t)
-		for i in range(0, len(signal), len(c1)):
-			#print(signal[i:i+len(c1)].real)
-			g = (signal[i:i+len(c1)].real)/c1
-			g1 = []
-			for n in g:
-				if str(n) != 'nan':
-					g1.append(n)
-			h = (signal[i:i+len(c1)].imag)/c2
-			h1 = []
-			for n in h:
-				if str(n) != 'nan':
-					h1.append(n)
-			print(g1)
-			print(h1)
-			print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
-			xgm.append(np.mean(g1) + 1j*np.mean(h1))
-		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
+		ygm = crr.CarrierDemodeQAM(signal, T)
+		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
-		r1 = modcpy.demodulate(xgm, demod_type="hard")
+		r1 = modcpy.demodulate(ygm, demod_type="hard")
 		print(np.array(r1))
 		return np.array(r1)
 	def De_MQAM_Entrelac_TV(signal, key, M, T):
@@ -453,38 +387,18 @@ class Demodulations:
 		M = nº da modulação
 		key = chave de desentrelaçamento da constelação
 		T = período do cada quadro
-		"""	
-		f, t = Generic_Carrier(T)
+		"""
 		modcpy = commod.QAMModem(M)
-		xgm = []
-		ygm = []
-		c1 = np.cos(2*np.pi*f*t)
-		c2 = np.sin(2*np.pi*f*t)
-		for i in range(0, len(signal), len(c1)):
-			#print(signal[i:i+len(c1)].real)
-			g = (signal[i:i+len(c1)].real)/c1
-			g1 = []
-			for n in g:
-				if str(n) != 'nan':
-					g1.append(n)
-			h = (signal[i:i+len(c1)].imag)/c2
-			h1 = []
-			for n in h:
-				if str(n) != 'nan':
-					h1.append(n)
-			print(g1)
-			print(h1)
-			print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
-			xgm.append(np.mean(g1) + 1j*np.mean(h1))
-		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
+		ygm = crr.CarrierDemodeQAM(signal, T)
+		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
 		r1 = []
 		aux = []
-		for i in range(0, len(xgm), key):
-			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		for i in range(0, len(ygm), key):
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
 		print(np.array(r1))
 		rech = np.transpose(np.array(r1))
 		rec = []
@@ -499,37 +413,17 @@ class Demodulations:
 		key = chave de desentrelaçamento da constelação
 		T = período do cada quadro
 		"""
-		f, t = Generic_Carrier(T)
 		modcpy = commod.QAMModem(M)
-		xgm = []
-		ygm = []
-		c1 = np.cos(2*np.pi*f*t)
-		c2 = np.sin(2*np.pi*f*t)
-		for i in range(0, len(signal), len(c1)):
-			#print(signal[i:i+len(c1)].real)
-			g = (signal[i:i+len(c1)].real)/c1
-			g1 = []
-			for n in g:
-				if str(n) != 'nan':
-					g1.append(n)
-			h = (signal[i:i+len(c1)].imag)/c2
-			h1 = []
-			for n in h:
-				if str(n) != 'nan':
-					h1.append(n)
-			print(g1)
-			print(h1)
-			print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
-			xgm.append(np.mean(g1) + 1j*np.mean(h1))
-		print(pd.DataFrame({"Xdm":np.array(xgm).real, "Ydm":np.array(xgm).imag}))
+		ygm = crr.CarrierDemodeQAM(signal, T)
+		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(xgm).real, "Y":np.array(xgm).imag}).plot(subplots=True)
+		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
 		plt.show()
 		r1 = []
 		aux = []
-		for i in range(0, len(xgm), key):
-			r1.append(modcpy.demodulate(xgm[i: i+key], demod_type="hard"))
+		for i in range(0, len(ygm), key):
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
 		print(np.array(r1))
 		rec2 = np.transpose(np.array(r1))
 		print(rec2)
@@ -538,25 +432,21 @@ class Demodulations:
 			for i in num:
 				recf.append(i)
 		return recf
-	def De_MQPSK(signal, M, key, T):
+	def De_MQPSK(signal, M, T):
 		"""
 		signal = sinal modulado
 		M = nº da modulação
 		key = chave de desentrelaçamento da constelação
 		T = período do cada quadro
 		"""
-		s = pskf.cosFilter(signal.real, False) - pskf.sinFilter(signal.imag, True)
-		#print(pd.DataFrame({'X':x, 'Y':y}))
-		ygm = []
-		for i in range(0, len(s), T):
-			ygm.append(np.mean(s[i:i+key]))
-			#print(f"{aux_X} | {aux_Y}")
-		print(pd.DataFrame({"Xgm":np.array(ygm).real, "Ygm":np.array(ygm).imag}))
+		modcpy = commod.QAMModem(M)
+		s = crr.CarrierDemodePSK(signal, T, M)
+		#ygm = pskf.cosFilter(s.real, False) - pskf.sinFilter(s.imag, True)
+		print(pd.DataFrame({"Xgm":s.real, "Ygm":s.imag}))
 		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
+		pd.DataFrame({"X":s.real, "Y":s.imag}).plot(subplots=True)
 		plt.title("Sinal Reconstituído")
 		plt.show()
-		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
+		r1 = modcpy.demodulate(s, demod_type="hard")
 		print(np.array(r1))
 		return np.array(r1)

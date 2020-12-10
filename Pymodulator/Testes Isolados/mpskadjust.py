@@ -1,22 +1,24 @@
 import numpy as np
 import carrier as crr
 
-def sinAdjust(y, T, M):
+def sinAdjust(y, T):
 	f, t = crr.Generic_Carrier(T)
 	s = []
 	for n in y:
-		s += list(np.sin(2*np.pi*f*t + (2*n - 1)*(np.pi/M)))
+		s += list(np.sin(np.pi/n)*np.sin(np.pi*f*t))
 	#print(s)
 	return np.array(s)
 
-def cosAdjust(x, T, M):
+def cosAdjust(x, T):
 	f, t = crr.Generic_Carrier(T)
 	g = []
 	for s in x:
-		if(s > 0):
-			g += list(np.cos(2*np.pi*f*t + s*(np.pi/M)))
-		if(s < 0):
-			g += list(-np.cos(2*np.pi*f*t + s*(np.pi/M)))
+		if s > 0:
+			g += list(np.cos((np.pi/(4*abs(s))))*np.cos(np.pi*f*t))
+		elif s == 0:
+			g += list(np.cos(s)*np.cos(np.pi*f*t))
+		else:
+			g += list(np.cos((np.pi/(4*abs(s))))*np.cos(np.pi*f*t))
 	#print(g)
 	return np.array(g)
 

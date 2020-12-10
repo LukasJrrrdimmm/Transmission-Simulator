@@ -1,9 +1,22 @@
 import numpy as np
 
+
+def noiseAdjust(s, l):
+	lim = np.floor(l/2)
+	a = []
+	for n in s:
+		if n <= lim:
+			a.append(n - lim)
+		else:
+			a.append(1 + n - lim)
+	return np.array(a)
+			
+		
+
 def setConstellation(msg, M):
 	l = np.log2(M)
 	v = []
-	for i in range(0, msg, l)
+	for i in range(0, msg, l):
 		aux = msg[i:i+l]
 		aux_2 = ""
 		for n in aux:
@@ -17,7 +30,7 @@ def setConstellation(msg, M):
 
 def setDirectConstellation(msg, l):
 	v = []
-	for i in range(0, msg, l)
+	for i in range(0, msg, l):
 		aux = msg[i:i+l]
 		aux_2 = ""
 		for n in aux:

@@ -6,6 +6,7 @@ import seaborn as sns
 import commpy.modulation as commod
 import mpskadjust as pskf
 import carrier as crr
+import scipy.fft as FFT
 
 def binary_generator(s, N):
 		return np.random.randint(2, size = s**N)
@@ -149,7 +150,7 @@ class Modulations:
 		qam_real = a2.real
 		qam_img = a2.imag
 		m = []
-		f, t = crr.Generic_Carrier(T)
+		f, t = crr.Generic_Carrier(T, period=False)
 		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
@@ -194,7 +195,7 @@ class Modulations:
 		qam_real = a2.real
 		qam_img = a2.imag
 		m = []
-		f, t = crr.Generic_Carrier(T)
+		f, t = crr.Generic_Carrier(T, period=False)
 		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
@@ -221,7 +222,7 @@ class Modulations:
 		m = []
 		q = []
 		i = []
-		f, t = crr.Generic_Carrier(T)
+		f, t = crr.Generic_Carrier(T, period=False)
 		print(f"{f} , {t}")
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
@@ -236,7 +237,7 @@ class Modulations:
 			i = i + list(yim)
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(m), np.array(q), np.array(i)# s(t), T
-	def MQPSK(v, sz, M, T): #Geração do sinal MQAM
+	def MQPSK(v, sz, M, T): #Double-MPSK geração de 2 sinais MPSK: 1 em fase e 1 em quadratura 
 		"""
 		v = mensagem de Entrada
 		sz = tamanho da mensagem
@@ -258,7 +259,7 @@ class Modulations:
 		s = []
 		gs = pskf.cosAdjust(np.array(a2).real, T, M) + pskf.sinAdjust(np.array(a2).imag, T, M)*1j
 		print(np.array(gs))
-		f, t = crr.Generic_Carrier(T)
+		f, t = crr.Generic_Carrier(T, period=False)
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(gs), len(c1)
 # signal, key, M, f1, f2
@@ -364,7 +365,7 @@ class Demodulations:
 				c -= 1
 			rs.append(aux_xa + aux_xb)
 		print(np.array(rs))
-	def De_MQAM(signal, M, T):
+	def De_MQAM(signal, M, T, flf):
 		"""
 		signal = sinal modulado
 		M = nº da modulação
@@ -372,7 +373,7 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T)
+		ygm = crr.CarrierDemodeQAM(signal, T, flf)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
@@ -432,7 +433,7 @@ class Demodulations:
 			for i in num:
 				recf.append(i)
 		return recf
-	def De_MQPSK(signal, M, T):
+	def De_MQPSK(signal, M, T):# D-MPSK
 		"""
 		signal = sinal modulado
 		M = nº da modulação

@@ -5,7 +5,8 @@ import mirror_constellation as mc
 #
 class Noising:
 	def WhiteNoiseGenerator(sm, snr, Tq):
-		Ps = abs((max(sm) - min(sm))/Tq)
+		#Ps = abs((max(sm) - min(sm))/Tq)
+		Ps = (np.mean(sm**2))
 		print("Ps = {}".format(np.log10(Ps)))
 		Pr = Ps*((10**snr)**(-1))
 		print("Pr = {}".format(Pr))

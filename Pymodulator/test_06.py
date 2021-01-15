@@ -9,8 +9,11 @@ import filtering_hibrid as filt
 
 def test_mqam(sd, rg, M, T, SNR): # MQAM Tradicional
 	e = filt.binary_generator(sd, rg)
+	print(e)
 	s, q, i = np.array(filt.Modulations.MQAM(e, M, T)) # modulação
+	print(s[0:10])
 	sf = s.real + s.imag
+	print(sf[0:10])
 	'''plt.plot(s.real, s.imag, "r")
 	plt.plot(s.real, s.imag, "ko")
 	plt.title("MQAM Signal Eye Diagram Emissor")
@@ -28,9 +31,14 @@ def test_mqam(sd, rg, M, T, SNR): # MQAM Tradicional
 	pd.DataFrame({"Sinal Completo (Com Ruido Branco)":cs}).plot()
 	plt.title("MQAM")
 	plt.show()
-	rec = filt.Demodulations.De_MQAM((q + i*1j), M, T)
+	rec = filt.Demodulations.De_MQAM((q + i*1j), M, T, True)
 	rec = np.array(rec)
+	print(e)
 	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
+	rec2 = filt.Demodulations.De_MQAM(s, M, T, False)
+	rec2 = np.array(rec2)
+	print(e)
+	print("diff = {}".format(len([abs(e[i] - rec2[i]) for i in range(0, len(e)) if(e[i] != rec2[i])])))
 def test_mqamEntrelac_A(sd, rg, M, T, SNR): #MQAM Entrelqaçado Tipo A
 	e = filt.binary_generator(sd, rg)
 	s, key, tau = filt.Modulations.MQAM_Entrelac_TH(e, 2**rg, M, T) # modulação
@@ -49,7 +57,7 @@ def test_mqamEntrelac_A(sd, rg, M, T, SNR): #MQAM Entrelqaçado Tipo A
 	plt.show()
 	cs = Chan_N.WhiteNoiseGenerator(s, SNR, T) + Chan_N.WhiteNoiseGenerator(cs.real, SNR, T)*1j
 	sns.set_style("whitegrid")
-	pd.DataFrame("Sinal Completo (Com Ruido Branco)":(cs.real - cs.imag)}).plot()
+	pd.DataFrame({"Sinal Completo (Com Ruido Branco)":(cs.real - cs.imag)}).plot()
 	plt.title("MQAM")
 	plt.show()
 	rec = filt.Demodulations.De_MQAM_Entrelac_TH(s, key, M, T)
@@ -80,9 +88,9 @@ def test_mqpsk(sd, rg, M, T, SNR): # MQPSK
 	pd.DataFrame({"Fase":s.real, "Quadratura":s.imag}).plot(subplots=True)
 	plt.title("MPSK")
 	plt.show()
-	cs = Chan_N.WhiteNoiseGenerator(cs.real, SNR, T) + Chan_N.WhiteNoiseGenerator(cs.imag, SNR, T)*1j
+	cs = Chan_N.WhiteNoiseGenerator(s.real, SNR, T) + Chan_N.WhiteNoiseGenerator(s.imag, SNR, T)*1j
 	sns.set_style("whitegrid")
-	pd.DataFrame({"Fase":cs.real, "Quadratura":cs.imag}).plot()
+	pd.DataFrame({"Fase":cs.real, "Quadratura":cs.imag}).plot(subplots = True)
 	plt.title("MPSK AWGN (Com Ruido Branco)")
 	plt.show()
 	rec = filt.Demodulations.De_MQPSK(s, M, T)

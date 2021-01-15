@@ -1,34 +1,40 @@
 import numpy as np
-def Generic_Carrier(T):
+import scipy as sp
+def Generic_Carrier(T, period):
 	bp=0.01
 	sp=bp*2    #symbol period for M-array QAM
 	sr=1/sp    #symbol rate
 	f=sr*2     #carry frequency 
 	t=np.arange(0, sp, sp/T)
-	return t, f
+	if period == False:
+		return t, f
+	else:
+		return t, f, sp
 
-def CarrierDemodeQAM(signal, T):
-	f, t = Generic_Carrier(T)
+def CarrierDemodeQAM(signal, T, cp):
+	t, f, sp = Generic_Carrier(T, period = True)
 	xgm = []
 	c1 = np.cos(2*np.pi*f*t)
 	c2 = np.sin(2*np.pi*f*t)
+	g1 = []
+	h1 = []
 	for i in range(0, len(signal), len(c1)):
-		g = (signal[i:i+len(c1)].real)/c1
-		g1 = []
-		for n in g:
-			if str(n) != 'nan':
-				g1.append(n)
-		h = (signal[i:i+len(c1)].imag)/c2
-		h1 = []
-		for n in h:
-			if str(n) != 'nan':
-				h1.append(n)
-		print("============{}A |{}| ".format((i/len(c1)), np.mean(g1) + 1j*np.mean(h1)))
-		xgm.append(np.mean(g1) + 1j*np.mean(h1))
-	return xgm
+		g = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c1), t)
+		g1 = round(2*g/sp)
+		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
+		h1 = round(2*h/sp)
+		print(g1)
+		print(h1)
+		if cp == True:
+			print("============{}A |{}| ".format((i/len(c1)), (np.array(g1) + np.array(h1))))
+			xgm += [np.array(g1) + np.array(h1)]
+		else:
+			print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+			xgm += [np.array(g1) + 1j*np.array(h1)]
+	return np.array(xgm)
 
 def CarrierDemodePSK(signal, T, M):
-	f, t = Generic_Carrier(T)
+	f, t = Generic_Carrier(T, period = False)
 	xgm = []
 	c1 = np.cos(2*np.pi*f*t)
 	for i in range(0, len(signal), len(c1)):
@@ -50,4 +56,5 @@ def CarrierDemodePSK(signal, T, M):
 		print(np.array(h1))
 		print("============{}A |{}| ".format((i/len(c1)), g1[0]+ h1[0]*1j))
 		xgm.append(g1[0] + 1j*h1[0])
+		
 	return np.array(xgm)

@@ -2,7 +2,7 @@ import numpy as np
 import carrier as crr
 
 def sinAdjust(y, T, M):
-	f, t = crr.Generic_Carrier(T)
+	f, t = crr.Generic_Carrier(T, period=False)
 	s = []
 	for n in y:
 		s += list(np.sin(2*np.pi*f*t + (2*n - 1)*(np.pi/M)))
@@ -10,7 +10,7 @@ def sinAdjust(y, T, M):
 	return np.array(s)
 
 def cosAdjust(x, T, M):
-	f, t = crr.Generic_Carrier(T)
+	f, t = crr.Generic_Carrier(T, period=False)
 	g = []
 	for s in x:
 		if(s > 0):

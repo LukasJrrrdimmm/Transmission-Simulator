@@ -159,7 +159,7 @@ class Modulations:
 		for k in range(0,len(qam_real)):
 			yr=qam_real[k]*np.cos(2*np.pi*f*t)
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
-			y=[a + b for a, b in zip(yr, yim*1j)]
+			y=[a + b for a, b in zip(yr, yim)]
 			m = m + y
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(m), l1, len(c1)
@@ -204,7 +204,7 @@ class Modulations:
 		for k in range(0,len(qam_real)):
 			yr=qam_real[k]*np.cos(2*np.pi*f*t)
 			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
-			y=[a + b for a, b in zip(yr, yim*1j)]
+			y=[a + b for a, b in zip(yr, yim)]
 			m = m + y
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(m), l1, len(c1)
@@ -236,7 +236,7 @@ class Modulations:
 			q = q + list(yr)
 			i = i + list(yim)
 		c1 = np.cos(2*np.pi*f*t)
-		return np.array(m), np.array(q), np.array(i)# s(t), T
+		return np.array(m), np.array(q), np.array(i)
 	def MQPSK(v, sz, M, T): #Double-MPSK geração de 2 sinais MPSK: 1 em fase e 1 em quadratura 
 		"""
 		v = mensagem de Entrada
@@ -246,9 +246,7 @@ class Modulations:
 		"""
 		dec = ""
 		print(np.array(v))
-		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		modcpy = commod.QAMModem(M)
-		# obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
 		a2 = modcpy.modulate(v)
 		print(np.array(a2))
 
@@ -373,7 +371,7 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T, flf)
+		ygm = crr.CarrierDemodeQAM(signal, T, False)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
@@ -390,7 +388,7 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T)
+		ygm = crr.CarrierDemodeQAM(signal, T, False)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
@@ -415,7 +413,7 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T)
+		ygm = crr.CarrierDemodeQAM(signal, T. False)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)

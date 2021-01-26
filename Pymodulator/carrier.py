@@ -11,7 +11,7 @@ def Generic_Carrier(T, period):
 	else:
 		return t, f, sp
 
-def CarrierDemodeQAM(signal, T, cp):
+def CarrierDemodeQAM(signal, T):
 	t, f, sp = Generic_Carrier(T, period = True)
 	xgm = []
 	c1 = np.cos(2*np.pi*f*t)
@@ -25,12 +25,8 @@ def CarrierDemodeQAM(signal, T, cp):
 		h1 = round(2*h/sp)
 		print(g1)
 		print(h1)
-		if cp == True:
-			print("============{}A |{}| ".format((i/len(c1)), (np.array(g1) + np.array(h1))))
-			xgm += [np.array(g1) + np.array(h1)]
-		else:
-			print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
-			xgm += [np.array(g1) + 1j*np.array(h1)]
+		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		xgm += [np.array(g1) + 1j*np.array(h1)]
 	return np.array(xgm)
 
 def CarrierDemodePSK(signal, T, M):

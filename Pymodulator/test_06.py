@@ -1,4 +1,4 @@
-import passFilt as pf
+#import passFilt as pf
 import seaborn as sns
 import pandas as pd
 import numpy as np
@@ -62,7 +62,7 @@ def test_mqamEntrelac_B(sd, rg, M, T, SNR): #MQAM Entrelaçado Tipo B
 	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
 def test_mqpsk(sd, rg, M, T, SNR): # MQPSK
 	e = filt.binary_generator(sd, rg)
-	s, tau = filt.Modulations.MQPSK(e, 2**rg, M, T)
+	s, tau = filt.Modulations.MQPSK(e, M, T)
 	sns.set_style("whitegrid")
 	pd.DataFrame({"Fase":s.real, "Quadratura":s.imag}).plot(subplots=True)
 	plt.title("MPSK")
@@ -70,6 +70,20 @@ def test_mqpsk(sd, rg, M, T, SNR): # MQPSK
 	cs = Chan_N.WhiteNoiseGenerator(s.real, SNR, T) + Chan_N.WhiteNoiseGenerator(s.imag, SNR, T)*1j
 	sns.set_style("whitegrid")
 	pd.DataFrame({"Fase":cs.real, "Quadratura":cs.imag}).plot(subplots = True)
+	plt.title("MPSK AWGN (Com Ruido Branco)")
+	plt.show()
+	rec = filt.Demodulations.De_MQPSK(s, M, T)
+	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
+def test_mpsk(sd, rg, M, T, SNR): # MQPSK
+	e = filt.binary_generator(sd, rg)
+	s, i, q = filt.Modulations.MPSK(e, M, T)
+	sns.set_style("whitegrid")
+	pd.DataFrame({"Sinal Completo":s}).plot(subplots=True)
+	plt.title("MPSK")
+	plt.show()
+	cs = Chan_N.WhiteNoiseGenerator(s, SNR, T)
+	sns.set_style("whitegrid")
+	pd.DataFrame({"Fase":cs}).plot(subplots = True)
 	plt.title("MPSK AWGN (Com Ruido Branco)")
 	plt.show()
 	rec = filt.Demodulations.De_MQPSK(s, M, T)

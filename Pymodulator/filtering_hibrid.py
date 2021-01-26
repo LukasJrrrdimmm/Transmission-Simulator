@@ -237,10 +237,9 @@ class Modulations:
 			i = i + list(yim)
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(m), np.array(q), np.array(i)
-	def MQPSK(v, sz, M, T): #Double-MPSK geração de 2 sinais MPSK: 1 em fase e 1 em quadratura 
+	def MQPSK(v, M, T): #Double-MPSK geração de 2 sinais MPSK: 1 em fase e 1 em quadratura 
 		"""
 		v = mensagem de Entrada
-		sz = tamanho da mensagem
 		M = nº da modulação
 		T = periodo do quadro
 		"""
@@ -260,6 +259,34 @@ class Modulations:
 		f, t = crr.Generic_Carrier(T, period=False)
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(gs), len(c1)
+	def MPSK(v, M, T): # Geração do sinal MQAM
+		"""
+		v = mensagem de Entrada
+		M = nº da modulação
+		T = periodo do quadro
+		"""
+		modcpy = commod.PSKModem(M)
+		a2 = modcpy.modulate(v)
+		qam_real = a2.real
+		qam_img = a2.imag
+		m = []
+		q = []
+		i = []
+		f, t = crr.Generic_Carrier(T, period=False)
+		print(f"{f} , {t}")
+		sns.set_style("whitegrid")
+		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
+		plt.title("Pre-Mod Constellated")
+		plt.show()
+		for k in range(0,len(qam_real)):
+			yr=qam_real[k]*np.cos(2*np.pi*f*t)
+			yim=qam_img[k]*np.sin(2*np.pi*f*t)           
+			y=[a + b for a, b in zip(yr, yim)]
+			m = m+y
+			q = q + list(yr)
+			i = i + list(yim)
+		return np.array(m), np.array(q), np.array(i)# s(t), T
+
 # signal, key, M, f1, f2
 class PassFilters:
 	def RcossineFilter(s, f, f1, B):
@@ -363,7 +390,7 @@ class Demodulations:
 				c -= 1
 			rs.append(aux_xa + aux_xb)
 		print(np.array(rs))
-	def De_MQAM(signal, M, T, flf):
+	def De_MQAM(signal, M, T):
 		"""
 		signal = sinal modulado
 		M = nº da modulação
@@ -371,15 +398,15 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T, False)
-		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
+		msg = crr.CarrierDemodeQAM(signal, T, modcpy)
+		'''print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
 		plt.title("Sinal Reconstruído")
-		plt.show()
-		r1 = modcpy.demodulate(ygm, demod_type="hard")
-		print(np.array(r1))
-		return np.array(r1)
+		plt.show()'''
+		#r1 = modcpy.demodulate(ygm, demod_type="hard")#desconversão da constelação
+		#print(np.array(r1))
+		return msg
 	def De_MQAM_Entrelac_TV(signal, key, M, T):
 		"""
 		signal = sinal modulado
@@ -388,7 +415,7 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T, False)
+		ygm = crr.CarrierDemodeQAM(signal, T)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
@@ -397,7 +424,7 @@ class Demodulations:
 		r1 = []
 		aux = []
 		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))#desconversão da constelação realizada no desentrelaçamento
 		print(np.array(r1))
 		rech = np.transpose(np.array(r1))
 		rec = []
@@ -413,7 +440,7 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T. False)
+		ygm = crr.CarrierDemodeQAM(signal, T)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
@@ -422,7 +449,7 @@ class Demodulations:
 		r1 = []
 		aux = []
 		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard")) #desconversão da constelação realizada no desentrelaçamento
 		print(np.array(r1))
 		rec2 = np.transpose(np.array(r1))
 		print(rec2)
@@ -438,14 +465,15 @@ class Demodulations:
 		key = chave de desentrelaçamento da constelação
 		T = período do cada quadro
 		"""
-		modcpy = commod.QAMModem(M)
-		s = crr.CarrierDemodePSK(signal, T, M)
+		modcpy = commod.PSKModem(M)
+		s = crr.CarrierDemodeMPSK(signal, T, modcpy)
+		#s = crr.CarrierDemodeDPSK(signal, T, M)
 		#ygm = pskf.cosFilter(s.real, False) - pskf.sinFilter(s.imag, True)
-		print(pd.DataFrame({"Xgm":s.real, "Ygm":s.imag}))
+		'''print(pd.DataFrame({"Xgm":s.real, "Ygm":s.imag}))
 		sns.set_style("whitegrid")
 		pd.DataFrame({"X":s.real, "Y":s.imag}).plot(subplots=True)
 		plt.title("Sinal Reconstituído")
 		plt.show()
 		r1 = modcpy.demodulate(s, demod_type="hard")
-		print(np.array(r1))
-		return np.array(r1)
+		print(np.array(r1))'''
+		return s

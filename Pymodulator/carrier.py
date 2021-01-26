@@ -11,7 +11,7 @@ def Generic_Carrier(T, period):
 	else:
 		return t, f, sp
 
-def CarrierDemodeQAM(signal, T):
+def CarrierDemodeQAMEntrelac(signal, T):
 	t, f, sp = Generic_Carrier(T, period = True)
 	xgm = []
 	c1 = np.cos(2*np.pi*f*t)
@@ -29,7 +29,61 @@ def CarrierDemodeQAM(signal, T):
 		xgm += [np.array(g1) + 1j*np.array(h1)]
 	return np.array(xgm)
 
-def CarrierDemodePSK(signal, T, M):
+def CarrierDemodeQAM(signal, T, modcpy):
+	
+	t, f, sp = Generic_Carrier(T, period = True)
+	sig1 = []
+	sig2 = []
+	c1 = np.cos(2*np.pi*f*t)
+	c2 = np.sin(2*np.pi*f*t)
+	g1 = []
+	h1 = []
+	for i in range(0, len(signal), len(c1)):
+		g = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c1), t)
+		g1 = round(2*g/sp)
+		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
+		h1 = round(2*h/sp)
+		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		sig1.append(g1)
+		sig2.append(h1)
+	print(sig1)
+	print(sig2)
+	# esse vetor é complexo
+	localiza = np.array(sig1) + 1j*np.array(sig2)
+
+	#usar o mapeamento  com compy (essa função não existe, use o compy para fazer esse mapeamento)
+	msg = modcpy.demodulate(localiza, demod_type="hard")
+	print(localiza)
+	return msg
+	#
+
+def CarrierDemodeMPSK(signal, T, modcpy):
+	t, f, sp = Generic_Carrier(T, period = True)
+	sig1 = []
+	sig2 = []
+	c1 = np.cos(2*np.pi*f*t)
+	c2 = np.sin(2*np.pi*f*t)
+	g1 = []
+	h1 = []
+	for i in range(0, len(signal), len(c1)):
+		g = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c1), t)
+		g1 = round(2*g/sp)
+		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
+		h1 = round(2*h/sp)
+		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		sig1.append(g1)
+		sig2.append(h1)
+	print(sig1)
+	print(sig2)
+	# esse vetor é complexo
+	localiza = np.array(sig1) + 1j*np.array(sig2)
+
+	#usar o mapeamento  com compy (essa função não existe, use o compy para fazer esse mapeamento)
+	msg = modcpy.demodulate(localiza, demod_type="hard")
+	print(localiza)
+	return msg
+
+def CarrierDemodeDMPSK(signal, T, M):
 	f, t = Generic_Carrier(T, period = False)
 	xgm = []
 	c1 = np.cos(2*np.pi*f*t)

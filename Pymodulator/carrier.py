@@ -67,9 +67,9 @@ def CarrierDemodeMPSK(signal, T, modcpy):
 	h1 = []
 	for i in range(0, len(signal), len(c1)):
 		g = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c1), t)
-		g1 = round(2*g/sp)
+		g1 = 2*g/sp
 		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
-		h1 = round(2*h/sp)
+		h1 = 2*h/sp
 		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		sig1.append(g1)
 		sig2.append(h1)
@@ -80,31 +80,8 @@ def CarrierDemodeMPSK(signal, T, modcpy):
 
 	#usar o mapeamento  com compy (essa função não existe, use o compy para fazer esse mapeamento)
 	msg = modcpy.demodulate(localiza, demod_type="hard")
+	print("variável localiza:")
 	print(localiza)
 	return msg
 
-def CarrierDemodeDMPSK(signal, T, M):
-	f, t = Generic_Carrier(T, period = False)
-	xgm = []
-	c1 = np.cos(2*np.pi*f*t)
-	for i in range(0, len(signal), len(c1)):
-		gs = signal[i:i+len(c1)].real
-		if(gs[0] >= 0):
-			g = (np.arccos(gs) - 2*np.pi*f*t)*(M/np.pi)
-		else:
-			g = (np.arccos(gs) - 2*np.pi*f*t)*(M/np.pi) - M
-		g1 = []
-		for n in g:
-			if str(n) != 'nan':
-				g1.append(n)
-		h = (((np.arcsin(signal[i:i+len(c1)].imag) - 2*np.pi*f*t)*M/np.pi) + 1)/2
-		h1 = []
-		for n in h:
-			if str(n) != 'nan':
-				h1.append(n)
-		print(np.array(g1))
-		print(np.array(h1))
-		print("============{}A |{}| ".format((i/len(c1)), g1[0]+ h1[0]*1j))
-		xgm.append(g1[0] + 1j*h1[0])
-		
-	return np.array(xgm)
+

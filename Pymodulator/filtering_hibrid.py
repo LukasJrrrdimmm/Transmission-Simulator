@@ -107,18 +107,28 @@ class GRAY:
 		plt.show()
 
 class Modulations:
-	def MPAM(v, M, T):
-		i = 0
-		dec = ""
-		bin_arr = []
-		for num in v:
-			dec += str(num)
-			i += 1
-			if i == 4:
-				i = 0
-				bin_arr.append(dec)
-				dec = ""
-		return bin_arr
+	def MPPM(v, M, T):
+		modcpy = commod.QAMModem(M)
+		a2 = modcpy.modulate(v)
+		qam_real = a2.real
+		qam_img = a2.imag
+		m = []
+		q = []
+		i = []
+		f, t = crr.Generic_Carrier(T, period=False)
+		print(f"{f} , {t}")
+		sns.set_style("whitegrid")
+		pd.DataFrame({"X":qam_real, "Y":qam_img}).plot(subplots=True)
+		plt.title("Pre-Mod Constellated")
+		plt.show()
+		for k in range(0,len(qam_real)):
+			yr=qam_real[k]*np.array([1]*int(t))
+			yim=qam_img[k]*np.array([1]*int(t))           
+			y=[a + b for a, b in zip(yr, yim)]
+			m = m + y
+			q = q + list(yr)
+			i = i + list(yim)
+		return np.array(m), np.array(q), np.array(i)
 	def MQAM_Entrelac_TH(v, sz, M, T): # Geração do sinal MQAM Entrelaçado tipo A
 		"""
 		v = mensagem de Entrada
@@ -254,11 +264,12 @@ class Modulations:
 		plt.title("Pre-Mod Constellated")
 		plt.show()
 		s = []
-		gs = pskf.cosAdjust(np.array(a2).real, T, M) + pskf.sinAdjust(np.array(a2).imag, T, M)*1j
+		# Ajuste do MPSK
+		gs = pskf.cosAdjust(np.array(a2).real, T, M) + pskf.sinAdjust(np.array(a2).imag, T, M)
 		print(np.array(gs))
 		f, t = crr.Generic_Carrier(T, period=False)
 		c1 = np.cos(2*np.pi*f*t)
-		return np.array(gs), len(c1)
+		return np.array(gs)
 	def MPSK(v, M, T): # Geração do sinal MQAM
 		"""
 		v = mensagem de Entrada
@@ -390,6 +401,7 @@ class Demodulations:
 				c -= 1
 			rs.append(aux_xa + aux_xb)
 		print(np.array(rs))
+#	def De_MQPM(signal, M, T):
 	def De_MQAM(signal, M, T):
 		"""
 		signal = sinal modulado
@@ -399,13 +411,6 @@ class Demodulations:
 		"""
 		modcpy = commod.QAMModem(M)
 		msg = crr.CarrierDemodeQAM(signal, T, modcpy)
-		'''print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
-		plt.title("Sinal Reconstruído")
-		plt.show()'''
-		#r1 = modcpy.demodulate(ygm, demod_type="hard")#desconversão da constelação
-		#print(np.array(r1))
 		return msg
 	def De_MQAM_Entrelac_TV(signal, key, M, T):
 		"""
@@ -415,23 +420,20 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T)
+		ygm = crr.CarrierDemodeQAMEntrelac(signal, T)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
-		plt.title("Sinal Reconstruído")
-		plt.show()
 		r1 = []
 		aux = []
 		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))#desconversão da constelação realizada no desentrelaçamento
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
+			#desconversão da constelação realizada no desentrelaçamento
 		print(np.array(r1))
 		rech = np.transpose(np.array(r1))
 		rec = []
 		for vec in rech:
 			for i in vec:
 				rec.append(i)
-		return rec
+		return np.array(rec)
 	def De_MQAM_Entrelac_TH(signal, key, M, T):
 		"""
 		signal = sinal modulado
@@ -440,16 +442,13 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAM(signal, T)
+		ygm = crr.CarrierDemodeQAMEntrelac(signal, T)
 		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":np.array(ygm).real, "Y":np.array(ygm).imag}).plot(subplots=True)
-		plt.title("Sinal Reconstruído")
-		plt.show()
 		r1 = []
 		aux = []
 		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard")) #desconversão da constelação realizada no desentrelaçamento
+			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
+			#desconversão da constelação realizada no desentrelaçamento
 		print(np.array(r1))
 		rec2 = np.transpose(np.array(r1))
 		print(rec2)
@@ -457,8 +456,8 @@ class Demodulations:
 		for num in rec2:
 			for i in num:
 				recf.append(i)
-		return recf
-	def De_MQPSK(signal, M, T):# D-MPSK
+		return np.array(recf)
+	def De_MPSK(signal, M, T):# D-MPSK
 		"""
 		signal = sinal modulado
 		M = nº da modulação
@@ -477,3 +476,4 @@ class Demodulations:
 		r1 = modcpy.demodulate(s, demod_type="hard")
 		print(np.array(r1))'''
 		return s
+

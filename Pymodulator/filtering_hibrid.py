@@ -129,7 +129,7 @@ class Modulations:
 			q = q + list(yr)
 			i = i + list(yim)
 		return np.array(m), np.array(q), np.array(i)
-	def MQAM_Entrelac_TH(v, sz, M, T): # Geração do sinal MQAM Entrelaçado tipo A
+	def MQAM_Entrelac_TH(v, sz, M, T): # Geração do sinal MQAM Entrelaçado tipo A (divisão pelo logatítimo do comprimento da mensagem)
 		"""
 		v = mensagem de Entrada
 		M = nº da modulação
@@ -173,7 +173,7 @@ class Modulations:
 			m = m + y
 		c1 = np.cos(2*np.pi*f*t)
 		return np.array(m), l1, len(c1)
-	def MQAM_Entrelac_TV(v, sz, M, T): # Geração do sinal MQAM Entrelaçado Tipo B
+	def MQAM_Entrelac_TV(v, sz, M, T): # Geração do sinal MQAM Entrelaçado Tipo B (usando divisão vetorial de tamanho igual ao logaritmo do tamanho da mensagem)
 		"""
 		v = mensagem de Entrada
 		M = nº da modulação
@@ -420,20 +420,8 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAMEntrelac(signal, T)
-		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
-		r1 = []
-		aux = []
-		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
-			#desconversão da constelação realizada no desentrelaçamento
-		print(np.array(r1))
-		rech = np.transpose(np.array(r1))
-		rec = []
-		for vec in rech:
-			for i in vec:
-				rec.append(i)
-		return np.array(rec)
+		msg = crr.CarrierDemodeQAMEntrelac(signal, T, modcpy, key)
+		return msg
 	def De_MQAM_Entrelac_TH(signal, key, M, T):
 		"""
 		signal = sinal modulado
@@ -442,21 +430,8 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.QAMModem(M)
-		ygm = crr.CarrierDemodeQAMEntrelac(signal, T)
-		print(pd.DataFrame({"Xdm":np.array(ygm).real, "Ydm":np.array(ygm).imag}))
-		r1 = []
-		aux = []
-		for i in range(0, len(ygm), key):
-			r1.append(modcpy.demodulate(ygm[i: i+key], demod_type="hard"))
-			#desconversão da constelação realizada no desentrelaçamento
-		print(np.array(r1))
-		rec2 = np.transpose(np.array(r1))
-		print(rec2)
-		recf = []
-		for num in rec2:
-			for i in num:
-				recf.append(i)
-		return np.array(recf)
+		msg = crr.CarrierDemodeQAMEntrelac(signal, T, modcpy, key)
+		return msg
 	def De_MPSK(signal, M, T):# D-MPSK
 		"""
 		signal = sinal modulado
@@ -465,15 +440,6 @@ class Demodulations:
 		T = período do cada quadro
 		"""
 		modcpy = commod.PSKModem(M)
-		s = crr.CarrierDemodeMPSK(signal, T, modcpy)
-		#s = crr.CarrierDemodeDPSK(signal, T, M)
-		#ygm = pskf.cosFilter(s.real, False) - pskf.sinFilter(s.imag, True)
-		'''print(pd.DataFrame({"Xgm":s.real, "Ygm":s.imag}))
-		sns.set_style("whitegrid")
-		pd.DataFrame({"X":s.real, "Y":s.imag}).plot(subplots=True)
-		plt.title("Sinal Reconstituído")
-		plt.show()
-		r1 = modcpy.demodulate(s, demod_type="hard")
-		print(np.array(r1))'''
-		return s
+		msg = crr.CarrierDemodeMPSK(signal, T, modcpy)
+		return msg
 

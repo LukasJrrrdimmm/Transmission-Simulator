@@ -32,10 +32,6 @@ def test_mqamEntrelac_A(sd, rg, M, T, SNR): #MQAM Entrelqaçado Tipo A
 	e = filt.binary_generator(sd, rg)
 	s, key, tau = filt.Modulations.MQAM_Entrelac_TH(e, 2**rg, M, T) # modulação
 	sns.set_style("whitegrid")
-	pd.DataFrame({"Fase":s.real, "Quadratura":s.imag}).plot()
-	plt.title("MQAM")
-	plt.show()
-	sns.set_style("whitegrid")
 	pd.DataFrame({"Sinal Completo (Sem Ruido)":s}).plot()
 	plt.title("MQAM")
 	plt.show()
@@ -75,7 +71,7 @@ def test_mpsk(sd, rg, M, T, SNR): # MPSK
 	rec = filt.Demodulations.De_MPSK(s, M, T)
 	print("diff = {}".format(len([abs(e[i] - rec[i]) for i in range(0, len(e)) if(e[i] != rec[i])])))
 
-def test_mppm(sd, rg, M, T, SNR): # MPPM Prototype
+def test_mppm(sd, rg, M, T, SNR): # MPPM Prototype (nexts steps)
 	e = filt.binary_generator(sd, rg)
 	s, i, q = filt.Modulations.MPPM(e, M, T)
 	sns.set_style("whitegrid")

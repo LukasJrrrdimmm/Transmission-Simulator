@@ -11,8 +11,10 @@ def Generic_Carrier(T, period):
 	else:
 		return t, f, sp
 
-def CarrierDemodeQAMEntrelac(signal, T):
+def CarrierDemodeQAMEntrelac(signal, T, modcpy, key):
 	t, f, sp = Generic_Carrier(T, period = True)
+	sig1 = []
+	sig2 = []
 	xgm = []
 	c1 = np.cos(2*np.pi*f*t)
 	c2 = np.sin(2*np.pi*f*t)
@@ -24,10 +26,23 @@ def CarrierDemodeQAMEntrelac(signal, T):
 		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
 		h1 = round(2*h/sp)
 		print(g1)
+		sig1.append(g1)
+		sig2.append(h1)
 		print(h1)
 		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		xgm += [np.array(g1) + 1j*np.array(h1)]
-	return np.array(xgm)
+	localiza = np.array(sig1) + 1j*np.array(sig2)
+	entrelac_M = []
+	aux = []
+	for i in range(0, len(localiza), key):
+		entrelac_M.append(modcpy.demodulate(localiza[i: i+key], demod_type="hard"))
+		#desconversão da constelação realizada no desentrelaçamento
+	msg_EM = np.transpose(np.array(entrelac_M))
+	msg = []
+	for vec in msg_EM:
+		for i in vec:
+			msg.append(i)
+	return np.array(msg)
 
 def CarrierDemodeQAM(signal, T, modcpy):
 	

@@ -1,6 +1,9 @@
 import numpy as np
-import scipy as sp
-def Generic_Carrier(T, period):
+from matplotlib import pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+def Generic_Carrier(T, period=False):
 	bp=0.01
 	sp=bp*2    #symbol period for M-array QAM
 	sr=1/sp    #symbol rate
@@ -11,8 +14,14 @@ def Generic_Carrier(T, period):
 	else:
 		return t, f, sp
 
-def CarrierDemodeQAMEntrelac(signal, T, modcpy, key):
-	t, f, sp = Generic_Carrier(T, period = True)
+def plot_message(qr, qi):
+	sns.set_style("whitegrid")
+	pd.DataFrame({"X": qr, "Y": qi}).plot(subplots=True)
+	plt.title("Pre-Mod Constellated")
+	plt.show()
+
+def CarrierDemodeQAMEntrelac(signal, T, modcpy, key, itermG=False):
+	t, f, sp = Generic_Carrier(T, period=True)
 	sig1 = []
 	sig2 = []
 	xgm = []
@@ -25,12 +34,14 @@ def CarrierDemodeQAMEntrelac(signal, T, modcpy, key):
 		g1 = round(2*g/sp)
 		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
 		h1 = round(2*h/sp)
-		print(g1)
+		#print(g1)
 		sig1.append(g1)
 		sig2.append(h1)
-		print(h1)
-		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		#print(h1)
+		#print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		xgm += [np.array(g1) + 1j*np.array(h1)]
+	if itermG == True:
+		plot_message(np.array(sig1), np.array(sig2)*1j)
 	localiza = np.array(sig1) + 1j*np.array(sig2)
 	entrelac_M = []
 	aux = []
@@ -44,9 +55,9 @@ def CarrierDemodeQAMEntrelac(signal, T, modcpy, key):
 			msg.append(i)
 	return np.array(msg)
 
-def CarrierDemodeQAM(signal, T, modcpy):
+def CarrierDemodeQAM(signal, T, modcpy, itermG=False):
 	
-	t, f, sp = Generic_Carrier(T, period = True)
+	t, f, sp = Generic_Carrier(T, period=True)
 	sig1 = []
 	sig2 = []
 	c1 = np.cos(2*np.pi*f*t)
@@ -58,11 +69,13 @@ def CarrierDemodeQAM(signal, T, modcpy):
 		g1 = round(2*g/sp)
 		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
 		h1 = round(2*h/sp)
-		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		#print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		sig1.append(g1)
 		sig2.append(h1)
-	print(sig1)
-	print(sig2)
+	#print(sig1)
+	#print(sig2)
+	if itermG == True:
+		plot_message(np.array(sig1), np.array(sig2)*1j)
 	# esse vetor é complexo
 	localiza = np.array(sig1) + 1j*np.array(sig2)
 
@@ -72,8 +85,8 @@ def CarrierDemodeQAM(signal, T, modcpy):
 	return msg
 	#
 
-def CarrierDemodeMPSK(signal, T, modcpy):
-	t, f, sp = Generic_Carrier(T, period = True)
+def CarrierDemodeMPSK(signal, T, modcpy, itermG=False):
+	t, f, sp = Generic_Carrier(T, period=True)
 	sig1 = []
 	sig2 = []
 	c1 = np.cos(2*np.pi*f*t)
@@ -91,6 +104,8 @@ def CarrierDemodeMPSK(signal, T, modcpy):
 	print(sig1)
 	print(sig2)
 	# esse vetor é complexo
+	if itermG == True:
+		plot_message(np.array(sig1), np.array(sig2)*1j)
 	localiza = np.array(sig1) + 1j*np.array(sig2)
 
 	#usar o mapeamento  com compy (essa função não existe, use o compy para fazer esse mapeamento)

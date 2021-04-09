@@ -31,6 +31,11 @@ def printFQ(q, i):
 
 def ModemStart(msg, modtype, T, M=16 ,SNR = -5, pq=False, itermG=False, demode=True,
 			   add_noise=True, finalG=False):
+	if(len(msg)%np.log2(M) != 0):
+		#profilaxy - profilaxia
+		g = int(np.log2(M)) - int(len(msg)%np.log2(M))
+		for i in range(0, g):
+			msg = np.array([0] + list(msg))
 	'''
 	ModemStart()
 	:param msg: message - mensagem a ser enviada
@@ -70,7 +75,7 @@ def ModemStart(msg, modtype, T, M=16 ,SNR = -5, pq=False, itermG=False, demode=T
 			cs = Chan_N.WhiteNoiseGenerator(s, SNR, T)
 			sns.set_style("whitegrid")
 			pd.DataFrame({f"Sinal {modtype.upper()} (Com Ruido Branco)": cs}).plot()
-			plt.title("Sinal {} Com Ruído".format(modtype.upper()))
+			plt.title("Sinal {} Com Ruído SNR = {}".format(modtype.upper(), SNR))
 			plt.show()
 		if demode:
 			print("Demodulação Habilitada")

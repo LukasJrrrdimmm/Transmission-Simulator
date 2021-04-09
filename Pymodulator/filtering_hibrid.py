@@ -114,6 +114,7 @@ def plot_message(qr, qi):
 
 class Modulations:
     def MPPM(v, M, T, itermG=False):
+        print("Modulação Iniciada")
         modcpy = commod.QAMModem(M)
         a2 = modcpy.modulate(v)
         qam_real = a2.real
@@ -132,8 +133,11 @@ class Modulations:
             m = m + y
             q = q + list(yr)
             i = i + list(yim)
+        print("Modulação Finalizada")
         return np.array(m), np.array(q), np.array(i)
-    def MQAM_Entrelac_TH(v, sz, M, T, itermG=False): # Geração do sinal MQAM Entrelaçado tipo A (divisão pelo logatítimo do comprimento da mensagem)
+
+    def MQAM_Entrelac_TH(v, sz, M, T, itermG=False):
+        # Geração do sinal MQAM Entrelaçado tipo A (divisão pelo logatítimo do comprimento da mensagem)
         """
         v = mensagem de Entrada
         M = nº da modulação
@@ -145,6 +149,7 @@ class Modulations:
         if lim > 64: # (M <= 64)
             lim = 64
         print("M = {}QAM".format(lim))
+        print("Entrelaçamento Iniciado")
         for i in range (0, int(lim)): # Divisão do vetor
             bin_arr_x0.append(np.array(v[int(i*(len(v)/lim)):(i+1)*(int(len(v)/lim))]))
         print(np.array(v))
@@ -152,9 +157,11 @@ class Modulations:
         aux = np.transpose(np.array(bin_arr_x0)) # transposição do vetor
         print(aux)
         a2 = []
+        print("Entrelaçamento Finalizado")
+        print("Modulação Iniciada")
         modcpy = commod.QAMModem(M)
         l1 = 0
-        # obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
+        # obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta e conversão M-ária gradual
         for b in aux: # mapeamento dos bits
             d1 = modcpy.modulate(b)
             l1 = len(d1)
@@ -174,13 +181,17 @@ class Modulations:
             y=[a + b for a, b in zip(yr, yim)]
             m = m + y
         c1 = np.cos(2*np.pi*f*t)
-        return np.array(m), l1, len(c1)
-    def MQAM_Entrelac_TV(v, sz, M, T, itermG=False): # Geração do sinal MQAM Entrelaçado Tipo B (usando divisão vetorial de tamanho igual ao logaritmo do tamanho da mensagem)
+        print("Modulação Finalizada")
+        return np.array(m), l1, len(c1), qam_real, qam_img
+
+    def MQAM_Entrelac_TV(v, sz, M, T, itermG=False):
+        # Geração do sinal MQAM Entrelaçado Tipo B (usando divisão vetorial de tamanho igual ao logaritmo do tamanho da mensagem)
         """
         v = mensagem de Entrada
         M = nº da modulação
         T = periodo do quadro
         """
+        print("Entrelaçamento Iniciado")
         dec = ""
         bin_arr_x0 = []
         lim = max2pow(np.log2(M)) # Execução do logarítimo para iteração
@@ -195,9 +206,10 @@ class Modulations:
         print(aux)
         a2 = []
         l1 = 0
-        # obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
+        print("Entrelaçamento Finalizado")
+        print("Modulação Iniciada")
         modcpy = commod.QAMModem(M)
-        # obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta
+        # obtenção das partes reiais e imaginárias a partir da divisão da matriz transposta e conversão M-ária gradual
         for b in aux: # mapeamento dos bits
             d1 = modcpy.modulate(b)
             l1 = len(d1)
@@ -217,6 +229,7 @@ class Modulations:
             y=[a + b for a, b in zip(yr, yim)]
             m = m + y
         c1 = np.cos(2*np.pi*f*t)
+        print("Modulação Terminada")
         return np.array(m), l1, len(c1)
 
     def MQAM(v, M, T, itermG=False): # Geração do sinal MQAM
@@ -225,6 +238,7 @@ class Modulations:
         M = nº da modulação
         T = periodo do quadro
         """
+        print("Modulação Iniciada")
         modcpy = commod.QAMModem(M)
         a2 = modcpy.modulate(v)
         qam_real = a2.real
@@ -244,13 +258,16 @@ class Modulations:
             q = q + list(yr)
             i = i + list(yim)
         c1 = np.cos(2*np.pi*f*t)
+        print("Modulação Terminada")
         return np.array(m), np.array(q), np.array(i)
+
     def MQPSK(v, M, T, itermG=False): #Double-MPSK geração de 2 sinais MPSK: 1 em fase e 1 em quadratura
         """
         v = mensagem de Entrada
         M = nº da modulação
         T = periodo do quadro
         """
+        print("Modulação Iniciada")
         dec = ""
         print(np.array(v))
         modcpy = commod.QAMModem(M)
@@ -264,13 +281,17 @@ class Modulations:
             print(np.array(gs))
             f, t = crr.Generic_Carrier(T)
             c1 = np.cos(2*np.pi*f*t)
-            return np.array(gs)
-    def MPSK(v, M, T, itermG=False): # Geração do sinal MQAM
+        print("Modulação Terminada")
+        return np.array(gs), a2.real, a2.imag
+
+    def MPSK(v, M, T, itermG=False):
+        # Geração do sinal MQAM
         """
         v = mensagem de Entrada
         M = nº da modulação
         T = periodo do quadro
         """
+        print("Modulação Iniciada")
         modcpy = commod.PSKModem(M)
         a2 = modcpy.modulate(v)
         qam_real = a2.real
@@ -289,6 +310,7 @@ class Modulations:
             m = m+y
             q = q + list(yr)
             i = i + list(yim)
+        print("Modulação Terminada")
         return np.array(m), np.array(q), np.array(i)# s(t), T
 
 

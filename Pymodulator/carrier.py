@@ -21,6 +21,7 @@ def plot_message(qr, qi):
 	plt.show()
 
 def CarrierDemodeQAMEntrelac(signal, T, modcpy, key, itermG=False):
+	print("Demodulação Iniciada:")
 	t, f, sp = Generic_Carrier(T, period=True)
 	sig1 = []
 	sig2 = []
@@ -38,11 +39,15 @@ def CarrierDemodeQAMEntrelac(signal, T, modcpy, key, itermG=False):
 		sig1.append(g1)
 		sig2.append(h1)
 		#print(h1)
-		#print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		xgm += [np.array(g1) + 1j*np.array(h1)]
 	if itermG == True:
 		plot_message(np.array(sig1), np.array(sig2)*1j)
 	localiza = np.array(sig1) + 1j*np.array(sig2)
+	print("Demodulação Finalizada")
+	print("Variável Localiza:")
+	print(localiza)
+	print("Desentrelaçamento Iniciado")
 	entrelac_M = []
 	aux = []
 	for i in range(0, len(localiza), key):
@@ -53,10 +58,11 @@ def CarrierDemodeQAMEntrelac(signal, T, modcpy, key, itermG=False):
 	for vec in msg_EM:
 		for i in vec:
 			msg.append(i)
+	print("Desentrelaçamento Finalizado")
 	return np.array(msg)
 
 def CarrierDemodeQAM(signal, T, modcpy, itermG=False):
-	
+	print("Demodulação Iniciada:")
 	t, f, sp = Generic_Carrier(T, period=True)
 	sig1 = []
 	sig2 = []
@@ -69,7 +75,7 @@ def CarrierDemodeQAM(signal, T, modcpy, itermG=False):
 		g1 = round(2*g/sp)
 		h = np.trapz((signal[[j for j in range(i , (i + len(c1)))]]*c2), t)
 		h1 = round(2*h/sp)
-		#print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
+		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		sig1.append(g1)
 		sig2.append(h1)
 	#print(sig1)
@@ -78,14 +84,16 @@ def CarrierDemodeQAM(signal, T, modcpy, itermG=False):
 		plot_message(np.array(sig1), np.array(sig2)*1j)
 	# esse vetor é complexo
 	localiza = np.array(sig1) + 1j*np.array(sig2)
-
 	#usar o mapeamento  com compy (essa função não existe, use o compy para fazer esse mapeamento)
 	msg = modcpy.demodulate(localiza, demod_type="hard")
+	print("Demodulação Finalizada")
+	print("Variável Localiza:")
 	print(localiza)
 	return msg
 	#
 
 def CarrierDemodeMPSK(signal, T, modcpy, itermG=False):
+	print("Demodulação Iniciada:")
 	t, f, sp = Generic_Carrier(T, period=True)
 	sig1 = []
 	sig2 = []
@@ -101,8 +109,8 @@ def CarrierDemodeMPSK(signal, T, modcpy, itermG=False):
 		print("============{}B |{}| ".format((i/len(c1)), (np.array(g1) + 1j*np.array(h1))))
 		sig1.append(g1)
 		sig2.append(h1)
-	print(sig1)
-	print(sig2)
+	#print(sig1)
+	#print(sig2)
 	# esse vetor é complexo
 	if itermG == True:
 		plot_message(np.array(sig1), np.array(sig2)*1j)
@@ -110,7 +118,8 @@ def CarrierDemodeMPSK(signal, T, modcpy, itermG=False):
 
 	#usar o mapeamento  com compy (essa função não existe, use o compy para fazer esse mapeamento)
 	msg = modcpy.demodulate(localiza, demod_type="hard")
-	print("variável localiza:")
+	print("Demodulação Finalizada")
+	print("Variável Localiza:")
 	print(localiza)
 	return msg
 

@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from channeling import Noising as Chan_N
 import filtering_hibrid as filt
 '''
-Author: Lukas Maximo Grilo Abreu Jardim
-Poweredby: UFRN - Departamento de Computação e Automação, Commpy, DCA - Departamento de Conputação e Automação - Centro de Tecnologia da UFRN
+Autor/Author: Lukas Maximo Grilo Abreu Jardim, Orientador/Manager: Me. Yuri Pedro dos Santos, Prof. Luiz Felipe de Queiroz Silveira
+Poweredby: UFRN - Departamento de Computação e Automação, Commpy and his developers, DCA - Departamento de Conputação e Automação - Centro de Tecnologia da UFRN
 PT: Esse código, por enquanto, aceita apenas mensagens binárias
 ****************
 EN: These code only accept binary messages for a while 

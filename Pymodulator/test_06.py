@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 from channeling import Noising as Chan_N
 import filtering_hibrid as filt
 '''
-Autor/Author: Lukas Maximo Grilo Abreu Jardim, Orientador/Manager: Me. Yuri Pedro dos Santos, Prof. Luiz Felipe de Queiroz Silveira
-Poweredby: UFRN - Departamento de Computação e Automação, Commpy and his developers, DCA - Departamento de Conputação e Automação - Centro de Tecnologia da UFRN
 PT: Esse código, por enquanto, aceita apenas mensagens binárias
 ****************
 EN: These code only accept binary messages for a while 
@@ -31,7 +29,7 @@ def printFQ(q, i):
 	plt.show()
 
 
-def ModemStart(msg, modtype, T, M=16 ,SNR = -5, pq=False, itermG=False, demode=True,
+def ModemStart(msg, modtype, T, M, SNR, pq=False, itermG=False, demode=True,
 			   add_noise=True, finalG=False):
 	if(len(msg)%np.log2(M) != 0):
 		#profilaxy - profilaxia

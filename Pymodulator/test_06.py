@@ -29,7 +29,7 @@ def printFQ(q, i):
 	plt.show()
 
 
-def ModemStart(msg, modtype, T, M, SNR, pq=False, itermG=False, demode=True,
+def ModemStart(msg, modtype, Ts, M, SNR, T=100, pq=False, itermG=False, demode=True,
 			   add_noise=True, finalG=False):
 	if(len(msg)%np.log2(M) != 0):
 		#profilaxy - profilaxia
@@ -40,9 +40,10 @@ def ModemStart(msg, modtype, T, M, SNR, pq=False, itermG=False, demode=True,
 	ModemStart()
 	:param msg: message - mensagem a ser enviada
 	:param modtype: modulation type - o tipo da modulação a ser executada
-	:param T: period - o período da onda portadora
+	:param Ts: Simbol Period - o período por símbolo
 	:param M: modulation number - o número da modulação
 	:param SNR: signal-noise ratio - a relação sinal-ruído
+	:param T: carrier period - o período da portadora, definido 100 por padrão
 	:param pq: phase-quadrature signal specte graphic (optinal) - o gráfico do sinal dividido em suas contrapartes em fase e em quadratura
 	:param itermG: M-ary constellation mapped message graphics (optional) - o gráfico da mensagem com o mapeamento M-ário em fase e quadratura
 	:param demode: demodulation switch (enabled as standard) - switch de demodulação (habilitado por padrão)
@@ -52,9 +53,9 @@ def ModemStart(msg, modtype, T, M, SNR, pq=False, itermG=False, demode=True,
 	global f, q, s, rec2
 	flag = True
 	if modtype.upper() == 'MQAM':
-		s, f, q = np.array(filt.Modulations.MQAM(msg, M, T, itermG))  # modulação	sns.set_style("whitegrid")
+		s, f, q = np.array(filt.Modulations.MQAM(msg, M, Ts, T, itermG))  # modulação	sns.set_style("whitegrid")
 	elif modtype.upper() == 'MPSK':
-		s, f, q = np.array(filt.Modulations.MPSK(msg, M, T, itermG))  # modulação	sns.set_style("whitegrid")
+		s, f, q = np.array(filt.Modulations.MPSK(msg, M, Ts, T, itermG))  # modulação	sns.set_style("whitegrid")
 	elif modtype.upper() == 'MPPM':
 		print("Modulação ainda não implementada")
 		flag = False
@@ -80,9 +81,9 @@ def ModemStart(msg, modtype, T, M, SNR, pq=False, itermG=False, demode=True,
 		if demode:
 			print("Demodulação Habilitada")
 			if modtype.upper() == 'MQAM':
-				rec2 = np.array(filt.Demodulations.De_MQAM(s, M, T, itermG))  # modulação	sns.set_style("whitegrid")
+				rec2 = np.array(filt.Demodulations.De_MQAM(s, M, Ts, T, itermG))  # modulação	sns.set_style("whitegrid")
 			elif modtype.upper() == 'MPSK':
-				rec2 = np.array(filt.Demodulations.De_MPSK(s, M, T, itermG))  # modulação	sns.set_style("whitegrid")
+				rec2 = np.array(filt.Demodulations.De_MPSK(s, M, Ts, T, itermG))  # modulação	sns.set_style("whitegrid")
 			print(msg)
 			print("diff = {}".format(len([abs(msg[i] - rec2[i]) for i in range(0, len(msg)) if (msg[i] != rec2[i])])))
 			if finalG:

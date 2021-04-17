@@ -232,17 +232,24 @@ class Modulations:
         print("Modulação Terminada")
         return np.array(m), l1, len(c1)
 
-    def MQAM(v, M, T, itermG=False): # Geração do sinal MQAM
+    def MQAM(v, M, Ts, T, itermG=False): # Geração do sinal MQAM
         """
         v = mensagem de Entrada
         M = nº da modulação
-        T = periodo do quadro
+        Ts = período por símbolo
+        T = periodo da portadora
         """
         print("Modulação Iniciada")
         modcpy = commod.QAMModem(M)
         a2 = modcpy.modulate(v)
-        qam_real = a2.real
-        qam_img = a2.imag
+        print(a2)
+        qam_real = []
+        qam_img = []
+        for i in a2:
+            qam_real += [i.real]*Ts
+            qam_img += [i.imag]*Ts
+        qam_real = np.array(qam_real)
+        qam_img = np.array(qam_img)
         m = []
         q = []
         i = []
@@ -284,7 +291,7 @@ class Modulations:
         print("Modulação Terminada")
         return np.array(gs), a2.real, a2.imag
 
-    def MPSK(v, M, T, itermG=False):
+    def MPSK(v, M, Ts, T, itermG=False):
         # Geração do sinal MQAM
         """
         v = mensagem de Entrada
@@ -294,8 +301,12 @@ class Modulations:
         print("Modulação Iniciada")
         modcpy = commod.PSKModem(M)
         a2 = modcpy.modulate(v)
-        qam_real = a2.real
-        qam_img = a2.imag
+        qam_real = []
+        qam_img = []
+        for i in a2:
+            qam_real += [i.real] * Ts
+            qam_img += [i.imag] * Ts
+        print(np.array(qam_real) + 1j*np.array(qam_img))
         m = []
         q = []
         i = []
@@ -346,7 +357,7 @@ class Demodulations:
             rs.append(aux_xa + aux_xb)
         print(np.array(rs))
     #	def De_MQPM(signal, M, T):
-    def De_MQAM(signal, M, T, itermG=False):
+    def De_MQAM(signal, M, Ts, T, itermG=False):
         """
         signal = sinal modulado
         M = nº da modulação
@@ -354,7 +365,7 @@ class Demodulations:
         T = período do cada quadro
         """
         modcpy = commod.QAMModem(M)
-        msg = crr.CarrierDemodeQAM(signal, T, modcpy, itermG)
+        msg = crr.CarrierDemodeQAM(signal, Ts, T, modcpy, itermG)
         return msg
     def De_MQAM_Entrelac_TV(signal, key, M, T, itermG=False):
         """
@@ -376,7 +387,7 @@ class Demodulations:
         modcpy = commod.QAMModem(M)
         msg = crr.CarrierDemodeQAMEntrelac(signal, T, modcpy, key, itermG)
         return msg
-    def De_MPSK(signal, M, T, itermG=False):# D-MPSK
+    def De_MPSK(signal, M, Ts, T, itermG=False):# D-MPSK
         """
         signal = sinal modulado
         M = nº da modulação
@@ -384,6 +395,6 @@ class Demodulations:
         T = período do cada quadro
         """
         modcpy = commod.PSKModem(M)
-        msg = crr.CarrierDemodeMPSK(signal, T, modcpy, itermG)
+        msg = crr.CarrierDemodeMPSK(signal, Ts, T, modcpy, itermG)
         return msg
 
